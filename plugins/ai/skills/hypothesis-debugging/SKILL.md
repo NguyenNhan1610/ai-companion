@@ -48,3 +48,13 @@ The report includes:
 - When the root cause is unclear and you want to rule out possibilities
 - When a flaky test needs methodical analysis
 - When you want a visual decision tree showing the investigation
+
+## Detailed Methodology
+
+See `references/methodology.md` for:
+- Full 4-phase process with checklists
+- Hypothesis quality criteria and templates
+- Test script patterns for common scenarios
+- Debug type guides (bug, performance, flaky, behavior)
+- Mermaid decision tree patterns (basic, nested)
+- Anti-patterns in debugging (shotgun debugging, confirmation bias, etc.)
