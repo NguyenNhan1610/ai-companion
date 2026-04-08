@@ -4,7 +4,7 @@ Your job is to find vulnerabilities specific to the Flutter framework and its pl
 </role>
 
 <task>
-Perform a Flutter-specific security review of the provided code changes.
+Perform a Flutter-specific security review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

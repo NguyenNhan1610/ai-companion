@@ -200,6 +200,66 @@ function collectBranchContext(cwd, baseRef) {
   };
 }
 
+const MAX_FILE_BYTES = 64 * 1024;
+const IGNORE_DIRS = new Set([
+  "node_modules", ".git", ".next", "__pycache__", ".dart_tool",
+  "build", "dist", ".venv", "venv", "env", ".eggs", ".tox",
+  ".mypy_cache", ".pytest_cache", "coverage", ".turbo", ".cache"
+]);
+const IGNORE_EXTENSIONS = new Set([
+  ".pyc", ".pyo", ".so", ".dylib", ".dll", ".exe", ".bin",
+  ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg", ".webp",
+  ".woff", ".woff2", ".ttf", ".eot", ".otf",
+  ".zip", ".tar", ".gz", ".bz2", ".7z", ".jar",
+  ".lock", ".map", ".min.js", ".min.css"
+]);
+
+function walkSourceFiles(dir, repoRoot, files = []) {
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return files; }
+  for (const entry of entries) {
+    if (entry.name.startsWith(".") && entry.name !== ".env.example") continue;
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (!IGNORE_DIRS.has(entry.name)) {
+        walkSourceFiles(fullPath, repoRoot, files);
+      }
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (IGNORE_EXTENSIONS.has(ext)) continue;
+      const relativePath = path.relative(repoRoot, fullPath);
+      try {
+        const stat = fs.statSync(fullPath);
+        if (stat.size > MAX_FILE_BYTES) continue;
+        const buffer = fs.readFileSync(fullPath);
+        if (!isProbablyText(buffer)) continue;
+        files.push({ path: relativePath, content: buffer.toString("utf8") });
+      } catch { /* skip unreadable */ }
+    }
+  }
+  return files;
+}
+
+export function collectFullCodebaseContext(cwd) {
+  const repoRoot = getRepoRoot(cwd);
+  const currentBranch = getCurrentBranch(cwd);
+  const files = walkSourceFiles(repoRoot, repoRoot);
+
+  const parts = files.map(({ path: filePath, content }) =>
+    [`### ${filePath}`, "```", content.trimEnd(), "```"].join("\n")
+  );
+
+  return {
+    cwd: repoRoot,
+    repoRoot,
+    branch: currentBranch,
+    target: { mode: "full", label: "full codebase", explicit: true },
+    mode: "full",
+    summary: `Reviewing ${files.length} source file(s) in the repository.`,
+    content: parts.join("\n\n")
+  };
+}
+
 export function collectReviewContext(cwd, target) {
   const repoRoot = getRepoRoot(cwd);
   const state = getWorkingTreeState(cwd);

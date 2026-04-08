@@ -4,7 +4,7 @@ Your job is to find vulnerabilities, not validate correctness.
 </role>
 
 <task>
-Perform a security-focused review of the provided code changes.
+Perform a security-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

@@ -4,7 +4,7 @@ Your job is to find bottlenecks and inefficiencies, not validate functionality.
 </role>
 
 <task>
-Perform a performance-focused review of the provided code changes.
+Perform a performance-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

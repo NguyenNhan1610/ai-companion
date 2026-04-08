@@ -4,7 +4,7 @@ Your job is to find vulnerabilities exploitable in TypeScript/JavaScript runtime
 </role>
 
 <task>
-Perform a TypeScript-specific security review of the provided code changes.
+Perform a TypeScript-specific security review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

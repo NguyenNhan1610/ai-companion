@@ -40,9 +40,10 @@ Argument handling:
 - Valid aspects: `security`, `performance`, `architecture`, `antipatterns`
 - Aspect format: `aspect` or `language:aspect` or `language/techstack:aspect`
   - Examples: `security`, `python:performance`, `python/fastapi:security`, `typescript/nextjs:architecture`
-- When an aspect is provided, the review uses a dedicated prompt template for that aspect.
-- When no aspect is provided, behave as before (native review when backend supports it).
+- When an aspect is provided, the review reads the full codebase (not just diffs) and uses a dedicated prompt template.
+- When no aspect is provided, behave as before (diff-based native review when backend supports it).
 - Aspect-based review does not accept additional free-form focus text.
+- `--base` and `--scope` are ignored for aspect-based reviews since they review the full codebase.
 - For custom review instructions or adversarial framing, use `/ai:adversarial-review`.
 
 Foreground flow:

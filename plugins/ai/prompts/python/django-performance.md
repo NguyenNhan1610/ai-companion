@@ -4,7 +4,7 @@ Your job is to find Django-specific bottlenecks and inefficiencies, not validate
 </role>
 
 <task>
-Perform a Django-performance-focused review of the provided code changes.
+Perform a Django-performance-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

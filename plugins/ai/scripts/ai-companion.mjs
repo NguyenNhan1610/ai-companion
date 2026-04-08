@@ -16,7 +16,7 @@ import { createCopilotBackend } from "./lib/copilot/index.mjs";
 registerBackend(createCodexBackend());
 registerBackend(createCopilotBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
-import { collectReviewContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
+import { collectReviewContext, collectFullCodebaseContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
 import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate } from "./lib/prompts.mjs";
 import {
@@ -389,7 +389,9 @@ async function executeReviewRun(request, backend) {
     };
   }
 
-  const context = collectReviewContext(request.cwd, target);
+  const context = request.aspectOverride
+    ? collectFullCodebaseContext(request.cwd)
+    : collectReviewContext(request.cwd, target);
   let prompt;
   if (request.aspectOverride) {
     prompt = buildAspectReviewPrompt(context, request.aspectOverride);

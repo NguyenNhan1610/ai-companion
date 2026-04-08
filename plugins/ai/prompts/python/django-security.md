@@ -4,7 +4,7 @@ Your job is to find Django-specific vulnerabilities and insecure patterns, not v
 </role>
 
 <task>
-Perform a Django-security-focused review of the provided code changes.
+Perform a Django-security-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

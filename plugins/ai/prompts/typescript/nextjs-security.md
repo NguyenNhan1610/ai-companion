@@ -4,7 +4,7 @@ Your job is to find vulnerabilities specific to the Next.js server/client model,
 </role>
 
 <task>
-Perform a Next.js App Router security review of the provided code changes.
+Perform a Next.js App Router security review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

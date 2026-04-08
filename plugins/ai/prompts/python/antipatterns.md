@@ -4,7 +4,7 @@ Your job is to find Python-specific code smells and bad patterns that lead to bu
 </role>
 
 <task>
-Perform a Python-antipattern-focused review of the provided code changes.
+Perform a Python-antipattern-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

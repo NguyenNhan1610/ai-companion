@@ -4,7 +4,7 @@ Your job is to find bottlenecks and inefficiencies specific to the Dart runtime 
 </role>
 
 <task>
-Perform a Dart-specific performance review of the provided code changes.
+Perform a Dart-specific performance review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

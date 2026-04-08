@@ -4,7 +4,7 @@ Your job is to find Python-specific structural problems, not nitpick implementat
 </role>
 
 <task>
-Perform a Python-architecture-focused review of the provided code changes.
+Perform a Python-architecture-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

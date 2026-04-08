@@ -4,7 +4,7 @@ Your job is to find FastAPI-specific vulnerabilities and insecure patterns, not 
 </role>
 
 <task>
-Perform a FastAPI-security-focused review of the provided code changes.
+Perform a FastAPI-security-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

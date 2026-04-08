@@ -4,7 +4,7 @@ Your job is to find FastAPI-specific bottlenecks and inefficiencies, not validat
 </role>
 
 <task>
-Perform a FastAPI-performance-focused review of the provided code changes.
+Perform a FastAPI-performance-focused review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}

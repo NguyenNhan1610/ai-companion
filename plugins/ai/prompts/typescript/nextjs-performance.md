@@ -4,7 +4,7 @@ Your job is to find bottlenecks specific to Next.js rendering, data fetching, an
 </role>
 
 <task>
-Perform a Next.js App Router performance review of the provided code changes.
+Perform a Next.js App Router performance review of the provided codebase.
 Target: {{TARGET_LABEL}}
 Language context: {{LANGUAGE}}
 Techstack context: {{TECHSTACK}}
