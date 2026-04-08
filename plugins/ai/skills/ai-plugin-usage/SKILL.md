@@ -39,7 +39,7 @@ If Codex is not installed, `/ai:setup` can install it for you (requires npm). If
 
 #### `/ai:review` - Standard Code Review
 
-Runs a read-only Codex review on your current work. Same quality as running `/review` inside Codex directly.
+Runs a read-only AI review on your current work. When the resolved backend is Codex, this uses the native `/review` flow; other backends (e.g., Copilot) use a generic task-based review path.
 
 ```bash
 /ai:review                    # Review uncommitted changes
@@ -104,7 +104,7 @@ You can also delegate naturally without the slash command:
 ```bash
 /ai:status                    # Show all running and recent jobs
 /ai:status task-abc123        # Check a specific job
-/ai:status --wait             # Poll until a running job completes
+/ai:status task-abc123 --wait # Poll until a specific job completes
 ```
 
 #### `/ai:result` - Get Job Output
