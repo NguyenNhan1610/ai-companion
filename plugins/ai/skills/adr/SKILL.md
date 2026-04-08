@@ -46,3 +46,12 @@ Generate comprehensive, evidence-based ADRs with visual Mermaid diagrams grounde
 Follows the standard ADR template: Context, Decision Drivers, Options, Comparison, Decision, Consequences, Implementation Plan, References.
 
 Every claim is grounded in the codebase. Files and line numbers are referenced. Diagrams include raw Mermaid source in collapsible `<details>` blocks for future editing.
+
+## Template Reference
+
+See `references/adr-template.md` for the complete ADR output format with:
+- Full section structure with examples for every field
+- Example Mermaid diagrams (current state, proposed state, comparison)
+- Comparison table format with quality attributes
+- Implementation plan with rollback strategy and verification criteria
+- Guidance on specificity (no vague assessments — every claim needs evidence)
