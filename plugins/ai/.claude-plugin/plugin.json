@@ -1,6 +1,6 @@
 {
   "name": "ai",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "Use Codex or Copilot from Claude Code to review code or delegate tasks.",
   "author": {
     "name": "OpenAI"
