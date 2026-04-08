@@ -148,3 +148,6 @@ vite.config.ts.timestamp-*
 
 output/
 plugins/ai/.generated/
+
+# Cascade change logs
+.claude/cascades/
