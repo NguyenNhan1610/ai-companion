@@ -41,15 +41,26 @@ Optional diagrams (based on scope):
 - Deployment diagram for infra decisions
 - State diagram for lifecycle changes
 
+### Phase 0: NUMBER
+Before anything else, determine the next ADR number:
+1. Use `Glob` to find existing ADR files: `docs/adr/ADR-*.md` and `adr/ADR-*.md` and `ADR-*.md`
+2. Extract the highest number from existing files (e.g., `ADR-05-redis-cache.md` → 5)
+3. Next number = highest + 1 (or 01 if none exist)
+4. Generate a slug from the decision topic: lowercase, hyphens, no special chars (e.g., "redis-vs-memcached")
+5. File name: `ADR-{NN}-{slug}.md` (e.g., `ADR-06-redis-vs-memcached.md`)
+6. Diagram files: `ADR-{NN}-{slug}-current.svg`, `ADR-{NN}-{slug}-proposed.svg`, `ADR-{NN}-{slug}-comparison.svg`
+
+Store ADR files in `docs/adr/` directory (create if needed).
+
 ### Phase 4: WRITE
-Produce the ADR following the template below exactly.
+Produce the ADR following the template below exactly. Save it as `docs/adr/ADR-{NN}-{slug}.md`.
 
 ## ADR Template
 
 Your output MUST follow this structure:
 
 ```markdown
-# ADR-{NNN}: {Decision Title}
+# ADR-{NN}: {Decision Title}
 
 **Date:** {YYYY-MM-DD}
 **Status:** Proposed
@@ -74,7 +85,7 @@ Reference specific code, metrics, or incidents.}
 
 ### Current State Diagram
 
-![Current Architecture](./adr-NNN-current.svg)
+![Current Architecture](./ADR-{NN}-{slug}-current.svg)
 
 <details>
 <summary>Mermaid source</summary>
@@ -134,7 +145,7 @@ Be specific — don't just say "best trade-off". Explain which trade-offs matter
 
 ### Proposed Architecture
 
-![Proposed Architecture](./adr-NNN-proposed.svg)
+![Proposed Architecture](./ADR-{NN}-{slug}-proposed.svg)
 
 <details>
 <summary>Mermaid source</summary>
@@ -147,7 +158,7 @@ Be specific — don't just say "best trade-off". Explain which trade-offs matter
 
 ### Architecture Comparison
 
-![Comparison](./adr-NNN-comparison.svg)
+![Comparison](./ADR-{NN}-{slug}-comparison.svg)
 
 <details>
 <summary>Mermaid source</summary>

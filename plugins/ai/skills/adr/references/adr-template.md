@@ -1,7 +1,7 @@
-# ADR-{NNN}: {Decision Title}
+# ADR-{NN}: {Decision Title}
 
 **Date:** {YYYY-MM-DD}
-**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-{NNN}
+**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-{NN}
 **Scope:** {module|system|api|data|infra}
 **Decision Makers:** {team/role}
 **Technical Story:** {link to issue/ticket if applicable}
@@ -32,7 +32,7 @@ Each driver must be specific and measurable. No vague statements like "need bett
 
 ### Current State Diagram
 
-![Current Architecture](./adr-{NNN}-current.svg)
+![Current Architecture](./ADR-{NN}-{slug}-current.svg)
 
 <details>
 <summary>Mermaid source</summary>
@@ -122,7 +122,7 @@ graph TD
 
 ### Comparison Diagram
 
-![Comparison](./adr-{NNN}-comparison.svg)
+![Comparison](./ADR-{NN}-{slug}-comparison.svg)
 
 <details>
 <summary>Mermaid source</summary>
@@ -162,7 +162,7 @@ Example:
 
 ### Proposed Architecture
 
-![Proposed Architecture](./adr-{NNN}-proposed.svg)
+![Proposed Architecture](./ADR-{NN}-{slug}-proposed.svg)
 
 <details>
 <summary>Mermaid source</summary>
