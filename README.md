@@ -1,305 +1,238 @@
-# Codex plugin for Claude Code
+# AI Companion Plugin for Claude Code
 
-Use Codex from inside Claude Code for code reviews or to delegate tasks to Codex.
+A high-quality fork of the Codex plugin that adds aspect-based code reviews, multi-agent council discussions, and auto-installable coding rules for FastAPI, Next.js, Django, and more.
 
-This plugin is for Claude Code users who want an easy way to start using Codex from the workflow
-they already have.
+## What's New in This Fork
 
-<video src="./docs/plugin-demo.webm" controls muted playsinline autoplay></video>
+| Feature | Original | This Fork |
+|---------|----------|-----------|
+| Code review | Diff-based only | **Full codebase** + aspect-based (`security`, `performance`, `architecture`, `antipatterns`) |
+| Language support | Generic | **Python, TypeScript, Dart** with techstack variants (FastAPI, Django, Next.js, Flutter) |
+| Multi-agent | None | **`/ai:council`** — parallel agents discuss, debate, synthesize |
+| Coding rules | None | **`/ai:setup --install-rules`** — auto-install best-practice rules into `.claude/rules/` |
+| Cascade logging | None | **PostToolUse hook** tracks all file changes to `.claude/cascades/{branch}.md` |
 
-## What You Get
+## Commands
 
-- `/codex:review` for a normal read-only Codex review
-- `/codex:adversarial-review` for a steerable challenge review
-- `/codex:rescue`, `/codex:status`, `/codex:result`, and `/codex:cancel` to delegate work and manage background jobs
+| Command | Description |
+|---------|-------------|
+| `/ai:review` | Standard or aspect-based code review |
+| `/ai:review security` | Full codebase security audit |
+| `/ai:review python/fastapi:performance` | FastAPI-specific performance review |
+| `/ai:adversarial-review` | Challenge review that questions design choices |
+| `/ai:council --roles security,performance` | Multi-agent discussion with debate |
+| `/ai:rescue` | Delegate investigation or fix to Codex |
+| `/ai:status` | Check job progress |
+| `/ai:result` | Get finished job output |
+| `/ai:cancel` | Cancel a running job |
+| `/ai:setup` | Check backend readiness, install rules, configure review gate |
 
 ## Requirements
 
-- **ChatGPT subscription (incl. Free) or OpenAI API key.**
-  - Usage will contribute to your Codex usage limits. [Learn more](https://developers.openai.com/codex/pricing).
+- **ChatGPT subscription (incl. Free) or OpenAI API key** — [pricing](https://developers.openai.com/codex/pricing)
 - **Node.js 18.18 or later**
 
 ## Install
 
-Add the marketplace in Claude Code:
-
 ```bash
-/plugin marketplace add openai/codex-plugin-cc
-```
-
-Install the plugin:
-
-```bash
-/plugin install codex@openai-codex
-```
-
-Reload plugins:
-
-```bash
+/plugin marketplace add NguyenNhan1610/ai-companion
+/plugin install ai@ai-backends
 /reload-plugins
+/ai:setup
 ```
 
-Then run:
+If Codex is not installed: `/ai:setup` can install it for you (requires npm).
+If not authenticated: run `!codex login`.
+
+### Install Coding Rules (Optional)
 
 ```bash
-/codex:setup
+/ai:setup --install-rules fastapi          # FastAPI + Python rules
+/ai:setup --install-rules nextjs           # Next.js + TypeScript rules
+/ai:setup --install-rules fastapi,nextjs   # Both stacks
+/ai:setup --install-rules django           # Django + Python rules
 ```
 
-`/codex:setup` will tell you whether Codex is ready. If Codex is missing and npm is available, it can offer to install Codex for you.
+This copies best-practice rules into `.claude/rules/` — they load on-demand when Claude reads matching files.
 
-If you prefer to install Codex yourself, use:
+## Aspect-Based Code Review
+
+Review the full codebase through a specific lens. Each aspect uses a dedicated prompt template with deep, language-specific expertise.
 
 ```bash
-npm install -g @openai/codex
+/ai:review security                        # Generic security audit
+/ai:review python:performance              # Python performance review
+/ai:review python/fastapi:security         # FastAPI-specific security
+/ai:review typescript/nextjs:performance   # Next.js App Router performance
+/ai:review dart/flutter:architecture       # Flutter architecture review
+/ai:review --base main                     # Diff-based review (no aspect)
 ```
 
-If Codex is installed but not logged in yet, run:
+**Available aspects:** `security`, `performance`, `architecture`, `antipatterns`
+
+**Supported stacks:**
+
+| Language | Base | Techstacks |
+|----------|------|------------|
+| Python | `python:security` | `python/fastapi:*`, `python/django:*` |
+| TypeScript | `typescript:security` | `typescript/nextjs:*` |
+| Dart | `dart:security` | `dart/flutter:*` |
+
+When no aspect is given, `/ai:review` uses the native Codex diff-based review. When an aspect is specified, it reads the **full codebase** and applies a specialized prompt template.
+
+## Multi-Agent Council
+
+Multiple AI agents analyze the codebase independently, debate each other's findings, and a synthesis agent produces the final verdict.
 
 ```bash
-!codex login
+/ai:council --roles security,performance Analyze the auth flow
+/ai:council --roles attacker,defender,judge Is our rate limiting sufficient?
+/ai:council --roles architecture,antipatterns --background
 ```
 
-After install, you should see:
+**Discussion model:**
 
-- the slash commands listed below
-- the `codex:codex-rescue` subagent in `/agents`
+```
+Round 1 (parallel):  Agent A ──┐
+                     Agent B ──┼── independent codebase exploration
+                     Agent C ──┘
+                         │
+Round 2 (parallel):  Agent A ──┐
+                     Agent B ──┼── each sees all Round 1 findings, challenges/agrees/adds
+                     Agent C ──┘
+                         │
+Synthesis:           Judge ────── resolves disagreements, deduplicates, final verdict
+```
 
-One simple first run is:
+**Predefined roles:** `security`, `performance`, `architecture`, `antipatterns`, `attacker`, `defender`, `judge`
+
+Custom freeform roles are also accepted. Default roles if `--roles` is omitted: `security,performance,architecture`. Maximum 7 roles.
+
+Total backend calls: `2 * N + 1` (3 roles = 7 calls).
+
+## Adversarial Review
+
+A steerable review that challenges the implementation approach and design choices.
 
 ```bash
-/codex:review --background
-/codex:status
-/codex:result
+/ai:adversarial-review
+/ai:adversarial-review --base main challenge whether this caching design is right
+/ai:adversarial-review --background look for race conditions
 ```
 
-## Usage
+## Task Delegation
 
-### `/codex:review`
-
-Runs a normal Codex review on your current work. It gives you the same quality of code review as running `/review` inside Codex directly.
-
-> [!NOTE]
-> Code review especially for multi-file changes might take a while. It's generally recommended to run it in the background.
-
-Use it when you want:
-
-- a review of your current uncommitted changes
-- a review of your branch compared to a base branch like `main`
-
-Use `--base <ref>` for branch review. It also supports `--wait` and `--background`. It is not steerable and does not take custom focus text. Use [`/codex:adversarial-review`](#codexadversarial-review) when you want to challenge a specific decision or risk area.
-
-Examples:
+Hand work to Codex through the rescue subagent.
 
 ```bash
-/codex:review
-/codex:review --base main
-/codex:review --background
+/ai:rescue investigate why the tests started failing
+/ai:rescue fix the failing test with the smallest safe patch
+/ai:rescue --resume apply the top fix from the last run
+/ai:rescue --model gpt-5.4-mini --effort medium investigate the flaky test
+/ai:rescue --background investigate the regression
 ```
 
-This command is read-only and will not perform any changes. When run in the background you can use [`/codex:status`](#codexstatus) to check on the progress and [`/codex:cancel`](#codexcancel) to cancel the ongoing task.
+Supports `--model provider:model`, `--effort level`, `--resume`, `--fresh`, `--background`, `--wait`.
 
-### `/codex:adversarial-review`
-
-Runs a **steerable** review that questions the chosen implementation and design.
-
-It can be used to pressure-test assumptions, tradeoffs, failure modes, and whether a different approach would have been safer or simpler.
-
-It uses the same review target selection as `/codex:review`, including `--base <ref>` for branch review.
-It also supports `--wait` and `--background`. Unlike `/codex:review`, it can take extra focus text after the flags.
-
-Use it when you want:
-
-- a review before shipping that challenges the direction, not just the code details
-- review focused on design choices, tradeoffs, hidden assumptions, and alternative approaches
-- pressure-testing around specific risk areas like auth, data loss, rollback, race conditions, or reliability
-
-Examples:
+## Job Management
 
 ```bash
-/codex:adversarial-review
-/codex:adversarial-review --base main challenge whether this was the right caching and retry design
-/codex:adversarial-review --background look for race conditions and question the chosen approach
+/ai:status                    # Show all running and recent jobs
+/ai:status job-id             # Check a specific job
+/ai:result                    # Show latest finished job output
+/ai:result job-id             # Show specific job output
+/ai:cancel job-id             # Cancel an active job
 ```
 
-This command is read-only. It does not fix code.
+## Coding Rules
 
-### `/codex:rescue`
-
-Hands a task to Codex through the `codex:codex-rescue` subagent.
-
-Use it when you want Codex to:
-
-- investigate a bug
-- try a fix
-- continue a previous Codex task
-- take a faster or cheaper pass with a smaller model
-
-> [!NOTE]
-> Depending on the task and the model you choose these tasks might take a long time and it's generally recommended to force the task to be in the background or move the agent to the background.
-
-It supports `--background`, `--wait`, `--resume`, and `--fresh`. If you omit `--resume` and `--fresh`, the plugin can offer to continue the latest rescue thread for this repo.
-
-Examples:
+The plugin bundles best-practice rules for Python/FastAPI/Django and TypeScript/Next.js. Install them into any project:
 
 ```bash
-/codex:rescue investigate why the tests started failing
-/codex:rescue fix the failing test with the smallest safe patch
-/codex:rescue --resume apply the top fix from the last run
-/codex:rescue --model gpt-5.4-mini --effort medium investigate the flaky integration test
-/codex:rescue --model spark fix the issue quickly
-/codex:rescue --background investigate the regression
+/ai:setup --install-rules fastapi,nextjs
 ```
 
-You can also just ask for a task to be delegated to Codex:
+Rules are copied to `.claude/rules/` and load **on-demand** when Claude reads matching files — zero context cost for unrelated work.
 
-```text
-Ask Codex to redesign the database connection to be more resilient.
+**What's included:**
+
+| Stack | Rules |
+|-------|-------|
+| Python | security, performance, antipatterns, architecture |
+| FastAPI | security, performance, antipatterns + Python base |
+| Django | security, performance + Python base |
+| TypeScript | security, performance, antipatterns, architecture |
+| Next.js | security, performance, architecture, antipatterns + TypeScript base |
+
+## Cascade Change Tracking
+
+A PostToolUse hook automatically records every file edit, create, and removal to `.claude/cascades/{branch}.md`:
+
+```markdown
+# Cascade: main
+
+- EDIT `plugins/ai/scripts/ai-companion.mjs`
+- CREATE `plugins/ai/prompts/council/security.md`
+- EDIT `plugins/ai/scripts/lib/render.mjs`
+- REMOVE `old-file.js`
 ```
 
-**Notes:**
+This provides a per-branch reference of what changed during a session.
 
-- if you do not pass `--model` or `--effort`, Codex chooses its own defaults.
-- if you say `spark`, the plugin maps that to `gpt-5.3-codex-spark`
-- follow-up rescue requests can continue the latest Codex task in the repo
+## Setup & Configuration
 
-### `/codex:status`
-
-Shows running and recent Codex jobs for the current repository.
-
-Examples:
+### Review Gate
 
 ```bash
-/codex:status
-/codex:status task-abc123
+/ai:setup --enable-review-gate
+/ai:setup --disable-review-gate
 ```
 
-Use it to:
+When enabled, a `Stop` hook runs a Codex review on Claude's recent changes before allowing the session to end.
 
-- check progress on background work
-- see the latest completed job
-- confirm whether a task is still running
+> **Warning:** The review gate can create long-running loops and drain usage limits.
 
-### `/codex:result`
+### Codex Configuration
 
-Shows the final stored Codex output for a finished job.
-When available, it also includes the Codex session ID so you can reopen that run directly in Codex with `codex resume <session-id>`.
+The plugin uses your existing Codex configuration:
 
-Examples:
+- **User-level:** `~/.codex/config.toml`
+- **Project-level:** `.codex/config.toml` (requires trusted project)
 
-```bash
-/codex:result
-/codex:result task-abc123
-```
-
-### `/codex:cancel`
-
-Cancels an active background Codex job.
-
-Examples:
-
-```bash
-/codex:cancel
-/codex:cancel task-abc123
-```
-
-### `/codex:setup`
-
-Checks whether Codex is installed and authenticated.
-If Codex is missing and npm is available, it can offer to install Codex for you.
-
-You can also use `/codex:setup` to manage the optional review gate.
-
-#### Enabling review gate
-
-```bash
-/codex:setup --enable-review-gate
-/codex:setup --disable-review-gate
-```
-
-When the review gate is enabled, the plugin uses a `Stop` hook to run a targeted Codex review based on Claude's response. If that review finds issues, the stop is blocked so Claude can address them first.
-
-> [!WARNING]
-> The review gate can create a long-running Claude/Codex loop and may drain usage limits quickly. Only enable it when you plan to actively monitor the session.
-
-## Typical Flows
-
-### Review Before Shipping
-
-```bash
-/codex:review
-```
-
-### Hand A Problem To Codex
-
-```bash
-/codex:rescue investigate why the build is failing in CI
-```
-
-### Start Something Long-Running
-
-```bash
-/codex:adversarial-review --background
-/codex:rescue --background investigate the flaky test
-```
-
-Then check in with:
-
-```bash
-/codex:status
-/codex:result
-```
-
-## Codex Integration
-
-The Codex plugin wraps the [Codex app server](https://developers.openai.com/codex/app-server). It uses the global `codex` binary installed in your environment and [applies the same configuration](https://developers.openai.com/codex/config-basic).
-
-### Common Configurations
-
-If you want to change the default reasoning effort or the default model that gets used by the plugin, you can define that inside your user-level or project-level `config.toml`. For example to always use `gpt-5.4-mini` on `high` for a specific project you can add the following to a `.codex/config.toml` file at the root of the directory you started Claude in:
+Example — always use gpt-5.4-mini with high effort:
 
 ```toml
 model = "gpt-5.4-mini"
 model_reasoning_effort = "xhigh"
 ```
 
-Your configuration will be picked up based on:
+### Supported Backends
 
-- user-level config in `~/.codex/config.toml`
-- project-level overrides in `.codex/config.toml`
-- project-level overrides only load when the [project is trusted](https://developers.openai.com/codex/config-advanced#project-config-files-codexconfigtoml)
-
-Check out the Codex docs for more [configuration options](https://developers.openai.com/codex/config-reference).
-
-### Moving The Work Over To Codex
-
-Delegated tasks and any [stop gate](#what-does-the-review-gate-do) run can also be directly resumed inside Codex by running `codex resume` either with the specific session ID you received from running `/codex:result` or `/codex:status` or by selecting it from the list.
-
-This way you can review the Codex work or continue the work there.
+| Feature | Codex (Default) | Copilot |
+|---------|-----------------|---------|
+| Type | Persistent app server | Stateless CLI |
+| Native reviews | Yes | No (task-based) |
+| Auth | `~/.codex/config.toml` | GitHub Copilot CLI |
+| Models | gpt-5.4, gpt-5.4-mini, gpt-5.3-codex-spark | Via Copilot CLI |
 
 ## FAQ
 
-### Do I need a separate Codex account for this plugin?
+### Do I need a separate Codex account?
 
-If you are already signed into Codex on this machine, that account should work immediately here too. This plugin uses your local Codex CLI authentication.
+If you're already signed into Codex on this machine, it works immediately. This plugin uses your local Codex CLI authentication. If you haven't used Codex yet, run `/ai:setup` to check readiness and `!codex login` to authenticate.
 
-If you only use Claude Code today and have not used Codex yet, you will also need to sign in to Codex with either a ChatGPT account or an API key. [Codex is available with your ChatGPT subscription](https://developers.openai.com/codex/pricing/), and [`codex login`](https://developers.openai.com/codex/cli/reference/#codex-login) supports both ChatGPT and API key sign-in. Run `/codex:setup` to check whether Codex is ready, and use `!codex login` if it is not.
+### Does the plugin modify my code?
 
-### Does the plugin use a separate Codex runtime?
+Reviews (`/ai:review`, `/ai:adversarial-review`, `/ai:council`) are **read-only**. Only `/ai:rescue` can make changes, and it defaults to write-capable mode (use `--no-write` for read-only).
 
-No. This plugin delegates through your local [Codex CLI](https://developers.openai.com/codex/cli/) and [Codex app server](https://developers.openai.com/codex/app-server/) on the same machine.
+### Can I resume work in Codex?
 
-That means:
+Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>` to continue in Codex directly.
 
-- it uses the same Codex install you would use directly
-- it uses the same local authentication state
-- it uses the same repository checkout and machine-local environment
+### What's the difference from the original plugin?
 
-### Will it use the same Codex config I already have?
+This fork adds aspect-based reviews (28 prompt templates for 3 languages + 5 techstacks), multi-agent council (parallel discussion + debate + synthesis), auto-installable coding rules, and cascade change tracking. The original only supports diff-based reviews with no language or aspect awareness.
 
-Yes. If you already use Codex, the plugin picks up the same [configuration](#common-configurations).
+## License
 
-### Can I keep using my current API key or base URL setup?
-
-Yes. Because the plugin uses your local Codex CLI, your existing sign-in method and config still apply.
-
-If you need to point the built-in OpenAI provider at a different endpoint, set `openai_base_url` in your [Codex config](https://developers.openai.com/codex/config-advanced/#config-and-state-locations).
+Apache 2.0
