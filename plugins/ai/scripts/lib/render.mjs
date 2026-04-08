@@ -185,6 +185,7 @@ export function renderSetupReport(report) {
     `- npm: ${report.npm.detail}`,
     `- codex: ${report.codex.detail}`,
     `- auth: ${report.auth.detail}`,
+    `- mmdc: ${report.mmdc?.available ? report.mmdc.detail : "not installed (run /ai:setup --install-mermaid)"}`,
     `- session runtime: ${report.sessionRuntime.label}`,
     `- review gate: ${report.reviewGateEnabled ? "enabled" : "disabled"}`,
     ""

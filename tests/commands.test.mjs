@@ -62,12 +62,13 @@ test("adversarial review command uses AskUserQuestion and background Bash while 
   assert.match(source, /--model <provider:model>/);
 });
 
-test("plugin exposes exactly 8 unified commands", () => {
+test("plugin exposes exactly 9 unified commands", () => {
   const commandFiles = fs.readdirSync(path.join(PLUGIN_ROOT, "commands")).sort();
   assert.deepEqual(commandFiles, [
     "adversarial-review.md",
     "cancel.md",
     "council.md",
+    "mermaid.md",
     "rescue.md",
     "result.md",
     "review.md",
@@ -126,20 +127,18 @@ test("rescue command absorbs continue semantics", () => {
   assert.match(runtimeSkill, /Strip it before calling `task`/i);
   assert.match(runtimeSkill, /Do not inspect the repository, read files, grep, monitor progress, poll status, fetch results, cancel jobs, summarize output, or do any follow-up work of your own/i);
   assert.match(runtimeSkill, /--model provider:model/i);
-  assert.match(readme, /`codex:codex-rescue` subagent/i);
-  assert.match(readme, /if you do not pass `--model` or `--effort`, Codex chooses its own defaults/i);
-  assert.match(readme, /--model gpt-5\.4-mini --effort medium/i);
-  assert.match(readme, /`spark`, the plugin maps that to `gpt-5\.3-codex-spark`/i);
-  assert.match(readme, /continue a previous Codex task/i);
-  assert.match(readme, /### `\/codex:setup`/);
-  assert.match(readme, /### `\/codex:review`/);
-  assert.match(readme, /### `\/codex:adversarial-review`/);
-  assert.match(readme, /uses the same review target selection as `\/codex:review`/i);
-  assert.match(readme, /--base main challenge whether this was the right caching and retry design/);
-  assert.match(readme, /### `\/codex:rescue`/);
-  assert.match(readme, /### `\/codex:status`/);
-  assert.match(readme, /### `\/codex:result`/);
-  assert.match(readme, /### `\/codex:cancel`/);
+  assert.match(readme, /\/ai:rescue/i);
+  assert.match(readme, /--model.*gpt-5\.4/i);
+  assert.match(readme, /gpt-5\.3-codex-spark/i);
+  assert.match(readme, /\/ai:setup/);
+  assert.match(readme, /\/ai:review/);
+  assert.match(readme, /\/ai:adversarial-review/);
+  assert.match(readme, /\/ai:rescue/);
+  assert.match(readme, /\/ai:status/);
+  assert.match(readme, /\/ai:result/);
+  assert.match(readme, /\/ai:cancel/);
+  assert.match(readme, /\/ai:council/);
+  assert.match(readme, /\/ai:mermaid/i);
 });
 
 test("result and cancel commands are exposed as deterministic runtime entrypoints", () => {

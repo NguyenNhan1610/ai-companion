@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -173,6 +173,8 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
   const authStatus = backend.getLoginStatus(cwd);
   const config = getConfig(workspaceRoot);
 
+  const mmdcStatus = binaryAvailable("mmdc", ["--version"], { cwd });
+
   const nextSteps = [];
   if (!codexStatus.available) {
     nextSteps.push("Install Codex with `npm install -g @openai/codex`.");
@@ -180,6 +182,9 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
   if (codexStatus.available && !authStatus.loggedIn) {
     nextSteps.push("Run `!codex login`.");
     nextSteps.push("If browser login is blocked, retry with `!codex login --device-auth` or `!codex login --with-api-key`.");
+  }
+  if (!mmdcStatus.available) {
+    nextSteps.push("Optional: run `/ai:setup --install-mermaid` to enable diagram rendering.");
   }
   if (!config.stopReviewGate) {
     nextSteps.push("Optional: run `/ai:setup --enable-review-gate` to require a fresh review before stop.");
@@ -191,6 +196,7 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
     npm: npmStatus,
     codex: codexStatus,
     auth: authStatus,
+    mmdc: mmdcStatus,
     sessionRuntime: backend.getSessionRuntimeStatus(),
     reviewGateEnabled: Boolean(config.stopReviewGate),
     actionsTaken,
@@ -253,7 +259,7 @@ function installRules(cwd, specifiers) {
 function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "provider", "install-rules"],
-    booleanOptions: ["json", "enable-review-gate", "disable-review-gate"]
+    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid"]
   });
 
   // Allow --provider to override the backend for setup checks
@@ -288,6 +294,50 @@ function handleSetup(argv, backend) {
         : `# Install Rules\n\n${actionsTaken.join("\n")}\n`,
       options.json
     );
+    return;
+  }
+
+  // Handle --install-mermaid
+  if (options["install-mermaid"]) {
+    const mmdcCheck = binaryAvailable("mmdc", ["--version"], { cwd });
+    if (mmdcCheck.available) {
+      outputResult(
+        options.json
+          ? { installMermaid: { installed: true, version: mmdcCheck.version } }
+          : `# Install Mermaid\n\nmmdc is already installed (${mmdcCheck.version}).\n`,
+        options.json
+      );
+      return;
+    }
+    const npmCheck = binaryAvailable("npm", ["--version"], { cwd });
+    if (!npmCheck.available) {
+      outputResult(
+        options.json
+          ? { installMermaid: { installed: false, error: "npm not available" } }
+          : "# Install Mermaid\n\nnpm is not available. Install Node.js/npm first.\n",
+        options.json
+      );
+      return;
+    }
+    try {
+      const installResult = spawnSync("npm", ["install", "-g", "@mermaid-js/mermaid-cli"], { cwd, encoding: "utf8", timeout: 120000 });
+      if (installResult.status !== 0) throw new Error(installResult.stderr || "npm install failed");
+      const versionResult = spawnSync("mmdc", ["--version"], { cwd, encoding: "utf8", timeout: 10000 });
+      const version = versionResult.stdout?.trim() || "unknown";
+      outputResult(
+        options.json
+          ? { installMermaid: { installed: true, version } }
+          : `# Install Mermaid\n\nInstalled @mermaid-js/mermaid-cli (mmdc ${version}).\n`,
+        options.json
+      );
+    } catch (err) {
+      outputResult(
+        options.json
+          ? { installMermaid: { installed: false, error: err.message } }
+          : `# Install Mermaid\n\nFailed to install: ${err.message}\n`,
+        options.json
+      );
+    }
     return;
   }
 

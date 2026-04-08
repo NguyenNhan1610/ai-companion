@@ -1,6 +1,6 @@
 ---
-description: Check whether the AI backend CLI is ready and optionally toggle the stop-time review gate or install coding rules
-argument-hint: '[--provider codex|copilot] [--enable-review-gate|--disable-review-gate] [--install-rules python|fastapi|django|typescript|nextjs]'
+description: Check whether the AI backend CLI is ready and optionally toggle the stop-time review gate, install coding rules, or install Mermaid.js
+argument-hint: '[--provider codex|copilot] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid]'
 allowed-tools: Bash(node:*), Bash(npm:*), AskUserQuestion
 ---
 

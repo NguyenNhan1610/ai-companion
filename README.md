@@ -27,7 +27,8 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | `/ai:status` | Check job progress |
 | `/ai:result` | Get finished job output |
 | `/ai:cancel` | Cancel a running job |
-| `/ai:setup` | Check backend readiness, install rules, configure review gate |
+| `/ai:mermaid` | Validate and render Mermaid.js diagrams |
+| `/ai:setup` | Check backend readiness, install rules, install Mermaid, configure review gate |
 
 ## Requirements
 
@@ -45,7 +46,7 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 /ai:setup
 ```
 
-**Codex backend:** If not installed, `/ai:setup` can install it (requires npm). If not authenticated, run `!codex login`.
+**Codex backend:** If not installed, `/ai:setup` will offer to install Codex for you (requires npm). If not authenticated, run `!codex login`.
 
 **Copilot backend:** Run `/ai:setup --provider copilot` to check readiness. If not authenticated, run `!copilot login`. Use `--model copilot:claude-opus-4.5` to select Copilot for individual commands.
 
