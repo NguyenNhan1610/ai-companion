@@ -463,3 +463,86 @@ export function renderCancelReport(job) {
 
   return `${lines.join("\n").trimEnd()}\n`;
 }
+
+function capitalizeRole(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+}
+
+export function renderCouncilResult(payload) {
+  const lines = [
+    "# AI Council",
+    "",
+    `**Roles:** ${payload.roles.map(capitalizeRole).join(", ")}`,
+    `**Topic:** ${payload.topic}`,
+    ""
+  ];
+
+  lines.push("## Round 1: Independent Analysis", "");
+  for (const agent of payload.round1) {
+    const verdict = agent.result?.parsed?.verdict ?? "unknown";
+    const summary = agent.result?.parsed?.summary ?? (agent.failed ? "Agent failed" : "No output");
+    const findingCount = agent.result?.parsed?.findings?.length ?? 0;
+    lines.push(`### ${capitalizeRole(agent.role)}`);
+    lines.push(`**Verdict:** ${verdict} | **Findings:** ${findingCount}`);
+    lines.push(summary, "");
+  }
+
+  lines.push("## Round 2: Debate", "");
+  for (const agent of payload.round2) {
+    const summary = agent.result?.parsed?.summary ?? (agent.failed ? "Agent failed" : "No output");
+    const findingCount = agent.result?.parsed?.findings?.length ?? 0;
+    lines.push(`### ${capitalizeRole(agent.role)}`);
+    if (findingCount > 0) lines.push(`**New/revised findings:** ${findingCount}`);
+    lines.push(summary, "");
+  }
+
+  lines.push("## Synthesis", "");
+  const s = payload.synthesis?.parsed;
+  if (s) {
+    lines.push(`**Verdict:** ${s.verdict}`, "");
+    lines.push(s.summary, "");
+
+    if (s.agents?.length) {
+      lines.push("### Per-Agent Summary", "");
+      for (const a of s.agents) {
+        lines.push(`- **${capitalizeRole(a.role)}:** ${a.verdict} (${a.finding_count} findings) -- ${a.summary}`);
+      }
+      lines.push("");
+    }
+
+    if (s.disagreements?.length) {
+      lines.push("### Disagreements", "");
+      for (const d of s.disagreements) {
+        lines.push(`- **${d.topic}**`);
+        for (const pos of d.positions) lines.push(`  - ${pos}`);
+        lines.push(`  - **Resolution:** ${d.resolution}`);
+      }
+      lines.push("");
+    }
+
+    if (s.findings?.length) {
+      const sorted = [...s.findings].sort((a, b) => severityRank(a.severity) - severityRank(b.severity));
+      lines.push("### Consolidated Findings", "");
+      for (const f of sorted) {
+        const loc = f.file ? ` (${f.file}${formatLineRange(f)})` : "";
+        const source = f.source_agent ? ` [${f.source_agent}]` : "";
+        lines.push(`- **[${f.severity}]** ${f.title}${loc}${source}`);
+        lines.push(`  ${f.body}`);
+        if (f.recommendation) lines.push(`  **Recommendation:** ${f.recommendation}`);
+      }
+      lines.push("");
+    }
+
+    if (s.next_steps?.length) {
+      lines.push("### Next Steps", "");
+      for (const step of s.next_steps) lines.push(`- ${step}`);
+    }
+  } else {
+    lines.push("Synthesis agent did not produce structured output.");
+    if (payload.synthesis?.rawOutput) {
+      lines.push("", "Raw output:", "```", payload.synthesis.rawOutput, "```");
+    }
+  }
+
+  return `${lines.join("\n").trimEnd()}\n`;
+}

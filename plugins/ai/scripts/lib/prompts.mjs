@@ -39,6 +39,16 @@ export function resolveAspectTemplate(rootDir, { aspect, language, techstack }) 
   );
 }
 
+export function loadCouncilPromptTemplate(rootDir, roleName) {
+  const councilDir = path.join(rootDir, "prompts", "council");
+  const rolePath = path.join(councilDir, `${roleName}.md`);
+  if (fs.existsSync(rolePath)) {
+    return fs.readFileSync(rolePath, "utf8");
+  }
+  const genericPath = path.join(councilDir, "generic.md");
+  return fs.readFileSync(genericPath, "utf8");
+}
+
 function listAvailableAspects(promptsDir) {
   const aspects = new Set();
   try {

@@ -18,7 +18,7 @@ registerBackend(createCopilotBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import { collectReviewContext, collectFullCodebaseContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
-import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate } from "./lib/prompts.mjs";
+import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate, loadCouncilPromptTemplate } from "./lib/prompts.mjs";
 import {
   generateJobId,
   getConfig,
@@ -54,11 +54,13 @@ import {
   renderJobStatusReport,
   renderSetupReport,
   renderStatusReport,
-  renderTaskResult
+  renderTaskResult,
+  renderCouncilResult
 } from "./lib/render.mjs";
 
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const REVIEW_SCHEMA = path.join(ROOT_DIR, "schemas", "review-output.schema.json");
+const COUNCIL_SCHEMA = path.join(ROOT_DIR, "schemas", "council-output.schema.json");
 const DEFAULT_STATUS_WAIT_TIMEOUT_MS = 240000;
 const DEFAULT_STATUS_POLL_INTERVAL_MS = 2000;
 const VALID_REASONING_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "xhigh"]);
@@ -71,6 +73,7 @@ function printUsage() {
       "  node scripts/ai-companion.mjs setup [--provider <codex|copilot>] [--enable-review-gate|--disable-review-gate] [--json]",
       "  node scripts/ai-companion.mjs review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [language[/techstack]:aspect]",
       "  node scripts/ai-companion.mjs adversarial-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [focus text]",
+      "  node scripts/ai-companion.mjs council [--model <provider:model>] [--roles <role1,role2,...>] [topic text]",
       "  node scripts/ai-companion.mjs task [--model <provider:model>] [--background] [--write] [--resume-last|--resume|--fresh] [--effort <none|minimal|low|medium|high|xhigh>] [prompt]",
       "  node scripts/ai-companion.mjs status [job-id] [--all] [--json]",
       "  node scripts/ai-companion.mjs result [job-id] [--json]",
@@ -263,6 +266,195 @@ function buildAspectReviewPrompt(context, { aspect, language, techstack }) {
     TECHSTACK: techstack || "any",
     REVIEW_INPUT: context.content
   });
+}
+
+const PREDEFINED_COUNCIL_ROLES = new Set([
+  "security", "performance", "architecture", "antipatterns",
+  "attacker", "defender", "judge"
+]);
+
+const MAX_AGENT_SUMMARY_CHARS = 2000;
+const MAX_FINDINGS_PER_AGENT = 5;
+
+function buildCouncilRolePrompt(role, topic, round1Summary) {
+  if (round1Summary) {
+    const debateTemplate = loadCouncilPromptTemplate(ROOT_DIR, "debate");
+    return interpolateTemplate(debateTemplate, {
+      ROLE_LABEL: capitalize(role),
+      COUNCIL_TOPIC: topic,
+      ROUND_1_FINDINGS: round1Summary
+    });
+  }
+  const template = loadCouncilPromptTemplate(ROOT_DIR, role);
+  return interpolateTemplate(template, {
+    ROLE_LABEL: capitalize(role),
+    ROLE_NAME: role,
+    ROLE_DESCRIPTION: PREDEFINED_COUNCIL_ROLES.has(role) ? `${capitalize(role)} specialist` : role,
+    COUNCIL_TOPIC: topic
+  });
+}
+
+function buildSynthesisPrompt(topic, allFindings) {
+  const template = loadCouncilPromptTemplate(ROOT_DIR, "synthesis");
+  return interpolateTemplate(template, {
+    COUNCIL_TOPIC: topic,
+    ALL_FINDINGS: allFindings
+  });
+}
+
+function formatAgentOutput(agentOutput) {
+  const { role, parsed } = agentOutput.result ?? {};
+  if (!parsed) return `## ${capitalize(agentOutput.role)} Agent\n\n(No structured output)\n`;
+
+  const lines = [
+    `## ${capitalize(agentOutput.role)} Agent`,
+    "",
+    `Verdict: ${parsed.verdict ?? "unknown"}`,
+    `Summary: ${(parsed.summary ?? "").substring(0, MAX_AGENT_SUMMARY_CHARS)}`,
+    ""
+  ];
+
+  const findings = (parsed.findings ?? []).slice(0, MAX_FINDINGS_PER_AGENT);
+  if (findings.length > 0) {
+    lines.push("Findings:");
+    for (const f of findings) {
+      const loc = f.file ? ` (${f.file}${f.line_start ? `:${f.line_start}` : ""})` : "";
+      lines.push(`- [${f.severity}] ${f.title}${loc}`);
+      if (f.body) lines.push(`  ${f.body.substring(0, 500)}`);
+      if (f.recommendation) lines.push(`  Recommendation: ${f.recommendation.substring(0, 300)}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+function formatRound1Summary(outputs) {
+  return outputs.map(formatAgentOutput).join("\n\n");
+}
+
+function formatAllFindings(round1Outputs, round2Outputs) {
+  const parts = ["# Round 1: Independent Analysis\n"];
+  parts.push(round1Outputs.map(formatAgentOutput).join("\n\n"));
+  parts.push("\n\n# Round 2: Debate\n");
+  parts.push(round2Outputs.map(formatAgentOutput).join("\n\n"));
+  return parts.join("");
+}
+
+async function executeCouncilRun(request, backend) {
+  ensureBackendReady(request.cwd, backend);
+  ensureGitRepository(request.cwd);
+
+  const { roles, topic, model, onProgress } = request;
+  const workspaceRoot = ensureGitRepository(request.cwd);
+  const reviewSchema = backend.readOutputSchema(REVIEW_SCHEMA);
+  const councilSchema = backend.readOutputSchema(COUNCIL_SCHEMA);
+
+  // Round 1: parallel independent exploration
+  onProgress?.({ message: `Round 1: ${roles.length} agents exploring independently`, phase: "round-1" });
+
+  const round1Results = await Promise.allSettled(
+    roles.map((role) => {
+      const prompt = buildCouncilRolePrompt(role, topic, null);
+      return backend.runTurn(workspaceRoot, {
+        prompt,
+        model,
+        sandbox: "read-only",
+        outputSchema: reviewSchema,
+        onProgress: (event) => {
+          onProgress?.({ message: `[${role}] ${event?.message || "working"}`, phase: "round-1" });
+        }
+      }).then((result) => ({
+        role,
+        result,
+        parsed: backend.parseStructuredOutput(result.finalMessage, {
+          status: result.status,
+          failureMessage: result.error?.message ?? result.stderr
+        })
+      }));
+    })
+  );
+
+  const round1Outputs = round1Results.map((settled, i) => {
+    if (settled.status === "fulfilled") return settled.value;
+    return { role: roles[i], result: null, parsed: { parsed: null, rawOutput: "" }, failed: true };
+  });
+
+  const round1Summary = formatRound1Summary(round1Outputs);
+
+  // Round 2: parallel debate
+  onProgress?.({ message: `Round 2: ${roles.length} agents debating findings`, phase: "round-2" });
+
+  const round2Results = await Promise.allSettled(
+    roles.map((role) => {
+      const prompt = buildCouncilRolePrompt(role, topic, round1Summary);
+      return backend.runTurn(workspaceRoot, {
+        prompt,
+        model,
+        sandbox: "read-only",
+        outputSchema: reviewSchema,
+        onProgress: (event) => {
+          onProgress?.({ message: `[${role} debate] ${event?.message || "working"}`, phase: "round-2" });
+        }
+      }).then((result) => ({
+        role,
+        result,
+        parsed: backend.parseStructuredOutput(result.finalMessage, {
+          status: result.status,
+          failureMessage: result.error?.message ?? result.stderr
+        })
+      }));
+    })
+  );
+
+  const round2Outputs = round2Results.map((settled, i) => {
+    if (settled.status === "fulfilled") return settled.value;
+    return { role: roles[i], result: null, parsed: { parsed: null, rawOutput: "" }, failed: true };
+  });
+
+  // Synthesis
+  onProgress?.({ message: "Synthesis: producing final verdict", phase: "synthesis" });
+
+  const allFindings = formatAllFindings(round1Outputs, round2Outputs);
+  const synthesisPrompt = buildSynthesisPrompt(topic, allFindings);
+
+  const synthesisResult = await backend.runTurn(workspaceRoot, {
+    prompt: synthesisPrompt,
+    model,
+    sandbox: "read-only",
+    outputSchema: councilSchema,
+    onProgress: (event) => {
+      onProgress?.({ message: `[synthesis] ${event?.message || "working"}`, phase: "synthesis" });
+    }
+  });
+
+  const synthesisParsed = backend.parseStructuredOutput(synthesisResult.finalMessage, {
+    status: synthesisResult.status,
+    failureMessage: synthesisResult.error?.message ?? synthesisResult.stderr
+  });
+
+  const payload = {
+    council: true,
+    roles,
+    topic,
+    round1: round1Outputs.map((o) => ({ role: o.role, result: o.parsed ?? o.result, failed: Boolean(o.failed) })),
+    round2: round2Outputs.map((o) => ({ role: o.role, result: o.parsed ?? o.result, failed: Boolean(o.failed) })),
+    synthesis: synthesisParsed,
+    threadId: synthesisResult.threadId
+  };
+
+  const rendered = renderCouncilResult(payload);
+
+  return {
+    exitStatus: synthesisResult.status,
+    threadId: synthesisResult.threadId,
+    turnId: synthesisResult.turnId,
+    payload,
+    rendered,
+    summary: synthesisParsed.parsed?.summary ?? "Council completed.",
+    jobTitle: `${backend.displayName} Council`,
+    jobClass: "review",
+    targetLabel: "full codebase"
+  };
 }
 
 function ensureBackendReady(cwd, backend) {
@@ -750,6 +942,45 @@ async function handleReview(argv, backend, resolvedModel = null) {
   }, backend, resolvedModel);
 }
 
+async function handleCouncil(argv, backend, resolvedModel = null) {
+  const { options, positionals } = parseCommandInput(argv, {
+    valueOptions: ["roles", "cwd"],
+    booleanOptions: ["json", "background", "wait"]
+  });
+
+  const cwd = resolveCommandCwd(options);
+  const workspaceRoot = resolveCommandWorkspace(options);
+
+  const rolesRaw = options.roles || "security,performance,architecture";
+  const roles = rolesRaw.split(",").map((r) => r.trim()).filter(Boolean);
+  if (roles.length === 0) throw new Error("At least one role is required for council.");
+  if (roles.length > 7) throw new Error("Maximum 7 council roles allowed.");
+
+  const topic = positionals.join(" ").trim() || "General code review and analysis";
+
+  const job = createCompanionJob({
+    prefix: "council",
+    kind: "council",
+    title: `${backend.displayName} Council`,
+    workspaceRoot,
+    jobClass: "review",
+    summary: `Council: ${roles.join(", ")} — ${shorten(topic)}`
+  });
+
+  await runForegroundCommand(
+    job,
+    (progress) =>
+      executeCouncilRun({
+        cwd,
+        model: resolvedModel,
+        roles,
+        topic,
+        onProgress: progress
+      }, backend),
+    { json: options.json }
+  );
+}
+
 async function handleTask(argv, backend, resolvedModel = null) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["effort", "cwd", "prompt-file"],
@@ -1061,6 +1292,9 @@ async function main() {
       await handleReviewCommand(argv, {
         reviewName: "Adversarial Review"
       }, backend, resolvedModel);
+      break;
+    case "council":
+      await handleCouncil(argv, backend, resolvedModel);
       break;
     case "task":
       await handleTask(argv, backend, resolvedModel);

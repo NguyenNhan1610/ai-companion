@@ -91,6 +91,30 @@ Use this when you want to:
 
 Also read-only: does not fix code.
 
+### Multi-Agent Council
+
+#### `/ai:council` - Multi-Agent Discussion
+
+Runs multiple AI agents in parallel, each analyzing the codebase from a different perspective. After independent analysis, agents debate each other's findings. A synthesis agent produces the final verdict.
+
+```bash
+/ai:council --roles security,performance           # Default topic
+/ai:council --roles security,performance,architecture Analyze our auth flow
+/ai:council --roles attacker,defender,judge Is our API rate limiting sufficient?
+/ai:council --roles security,antipatterns --background
+```
+
+Discussion model (Parallel -> Debate -> Synthesis):
+1. **Round 1**: All agents explore the codebase independently in parallel
+2. **Round 2**: Each agent sees all Round 1 findings, challenges/agrees/adds
+3. **Synthesis**: A judge agent resolves disagreements and produces the final verdict
+
+Predefined roles: `security`, `performance`, `architecture`, `antipatterns`, `attacker`, `defender`, `judge`
+
+Custom freeform roles are also accepted. Default roles (if `--roles` omitted): security, performance, architecture. Maximum 7 roles.
+
+Total backend calls: `2 * N + 1` (3 roles = 7 calls).
+
 ### Task Delegation
 
 #### `/ai:rescue` - Delegate Work to Codex
