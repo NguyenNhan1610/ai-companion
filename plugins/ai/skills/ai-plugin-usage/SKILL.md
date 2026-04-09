@@ -23,6 +23,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Delegate a fix to Codex | `/ai:rescue fix the failing test` |
 | Continue previous Codex work | `/ai:rescue --resume apply the top fix` |
 | Document an architecture decision | `/ai:adr Should we use Redis or Memcached?` |
+| Plan a feature with risk assessment | `/ai:fdr Add multi-tenant session caching` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
 | Validate diagram syntax | `/ai:mermaid validate graph TD; A-->B` |
 | Install coding rules | `/ai:setup --install-rules fastapi,nextjs` |
@@ -142,6 +143,23 @@ Generate a comprehensive ADR with Mermaid diagrams grounded in your codebase.
 Scopes: `module` (default), `system`, `api`, `data`, `infra`
 
 Outputs: Context, decision drivers, 2-3 options with trade-offs, comparison table, 3 Mermaid diagrams (current/proposed/comparison) with raw source, implementation plan.
+
+### Feature Development Records
+
+#### `/ai:fdr` — Feature Development Decision Record
+
+Plan a feature with deep codebase analysis, edge cases, risk assessment, and implementation roadmap.
+
+```bash
+/ai:fdr Add multi-tenant session caching
+/ai:fdr --scope api Add rate limiting to the public API
+/ai:fdr --scope fullstack Add real-time notifications
+/ai:fdr --scope data Migrate orders to event sourcing
+```
+
+Scopes: `backend` (default), `frontend`, `fullstack`, `api`, `data`
+
+Outputs: Dependency graph, data flow diagram, edge case tables, risk matrix, backward compatibility analysis, testing strategy, implementation timeline (Gantt), rollout plan, observability plan. Saved to `.claude/project/fdr/`.
 
 ### Task Delegation
 
