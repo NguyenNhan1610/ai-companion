@@ -275,7 +275,7 @@ PostToolUse + UserPromptSubmit hooks auto-log every change with timestamps and l
 | Type | Persistent app server | Stateless CLI |
 | Native reviews | Yes | No (task-based) |
 | Auth | `~/.codex/config.toml` | GitHub Copilot CLI |
-| Models | gpt-5.4, gpt-5.4-mini, gpt-5.3-codex-spark | Via Copilot CLI |
+| Models | gpt-5.4, gpt-5.4-mini | Via Copilot CLI |
 
 ### Codex Configuration
 

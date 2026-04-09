@@ -135,17 +135,22 @@ test("rescue command absorbs continue semantics", () => {
   assert.match(runtimeSkill, /Do not inspect the repository, read files, grep, monitor progress, poll status, fetch results, cancel jobs, summarize output, or do any follow-up work of your own/i);
   assert.match(runtimeSkill, /--model provider:model/i);
   assert.match(readme, /\/ai:rescue/i);
-  assert.match(readme, /--model.*gpt-5\.4/i);
-  assert.match(readme, /gpt-5\.3-codex-spark/i);
+  assert.match(readme, /gpt-5\.4/i);
   assert.match(readme, /\/ai:setup/);
   assert.match(readme, /\/ai:review/);
   assert.match(readme, /\/ai:adversarial-review/);
-  assert.match(readme, /\/ai:rescue/);
   assert.match(readme, /\/ai:status/);
   assert.match(readme, /\/ai:result/);
   assert.match(readme, /\/ai:cancel/);
   assert.match(readme, /\/ai:council/);
   assert.match(readme, /\/ai:mermaid/i);
+  assert.match(readme, /\/ai:debug/i);
+  assert.match(readme, /\/ai:adr/i);
+  assert.match(readme, /\/ai:fdr/i);
+  assert.match(readme, /\/ai:implement/i);
+  assert.match(readme, /\/ai:todo/i);
+  assert.match(readme, /\/ai:cascade/i);
+  assert.match(readme, /\/ai:lint/i);
 });
 
 test("result and cancel commands are exposed as deterministic runtime entrypoints", () => {
