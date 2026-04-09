@@ -39,7 +39,7 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | Knowledge base | None | **`/ai:knowledge`** — extract, index, search reusable knowledge + auto-suggest |
 | Project init | None | **`/ai:setup --init`** — creates project dirs + appends to CLAUDE.md |
 
-## Commands (17)
+## Commands (18)
 
 ### Review & Analysis
 
@@ -63,6 +63,7 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | `/ai:todo` | Task tracking with status, tickets, and traceability |
 | `/ai:cascade` | Handoff records with traceability to all documents |
 | `/ai:knowledge` | Extract, index, search reusable knowledge from project docs |
+| `/ai:trace` | Traceability report: verify completeness across all documents |
 | `/ai:mermaid` | Validate and render Mermaid.js diagrams |
 
 ### Delegation & Management
@@ -115,6 +116,7 @@ After `/ai:setup --init`:
 ├── todos/                    ← /ai:todo — Task tracking (YAML)
 ├── cascades/                 ← /ai:cascade — Implementation records
 ├── scripts/hypothesis/       ← /ai:debug — Hypothesis test scripts + results
+├── traces/                   ← /ai:trace — Traceability verification reports
 ├── knowledge/                ← /ai:knowledge — Patterns, lessons, decisions, antipatterns
 │   ├── index.yaml            ← Master index for retrieval + trigger patterns
 │   ├── patterns/             ← Reusable implementation approaches
@@ -250,6 +252,19 @@ Extract reusable knowledge from project experience and retrieve it when starting
 
 **Auto-suggestion (Phase 2):** FDR, ADR, IMPL, and debug agents automatically check the knowledge index and surface relevant past experience before starting analysis.
 
+## Traceability Reports
+
+Verify feature completeness by tracing decisions through plans, code, tests, and knowledge.
+
+```bash
+/ai:trace FDR-03                    # Trace feature from plan to code
+/ai:trace ADR-05                    # Trace decision downstream
+/ai:trace --verify FDR-03           # Ship/no-ship verdict
+/ai:trace --query "Is session caching fully implemented?"
+```
+
+Uses 3 parallel sub-agents for fast evidence collection. Checks: document chain, edge case coverage, risk mitigation, task completion, test coverage, knowledge applied. Produces gap analysis with severity classification and overall coverage percentage. Saved to `.claude/project/traces/TRACE-{NN}-{slug}.md`.
+
 ## Lint & Typecheck
 
 ```bash
@@ -345,7 +360,7 @@ Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>`
 
 ### What's the difference from the original?
 
-This fork adds 17 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, ADR/FDR/IMPL/TODO document flow, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
+This fork adds 18 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, ADR/FDR/IMPL/TODO document flow, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
 
 ## License
 

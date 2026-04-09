@@ -27,6 +27,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Generate implementation checklist | `/ai:implement --from .claude/project/fdr/FDR-03.md` |
 | Document what was built (handoff) | `/ai:cascade Add session caching` |
 | Extract/search project knowledge | `/ai:knowledge extract` or `/ai:knowledge search django` |
+| Verify feature completeness | `/ai:trace --verify FDR-03` |
 | Track task progress | `/ai:todo` or `/ai:todo --from IMPL-03` |
 | Lint/typecheck changed files | `/ai:lint` or `/ai:lint --fix` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
@@ -146,6 +147,21 @@ Inline content — no file needed. Outputs SVG (default) or PNG. Requires mmdc (
 
 Types: patterns, lessons, decisions, antipatterns. Auto-suggested when starting FDR/ADR/IMPL/debug.
 Saved to `.claude/project/knowledge/`.
+
+### Traceability
+
+#### `/ai:trace` — Traceability Report
+
+Verify feature completeness by tracing decisions through plans, code, tests, and knowledge.
+
+```bash
+/ai:trace FDR-03                    # Trace from FDR to implementation
+/ai:trace ADR-05                    # Trace from ADR downstream
+/ai:trace --verify FDR-03           # Ship/no-ship verdict
+/ai:trace --query "Is session caching done?"
+```
+
+Uses 3 parallel sub-agents for fast evidence collection. Produces: document chain diagram, edge case/risk/task/test coverage matrices, gap analysis with severity, overall coverage percentage. Saved to `.claude/project/traces/`.
 
 ### Architecture Decision Records
 
