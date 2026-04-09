@@ -25,6 +25,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Document an architecture decision | `/ai:adr Should we use Redis or Memcached?` |
 | Plan a feature with risk assessment | `/ai:fdr Add multi-tenant session caching` |
 | Generate implementation checklist | `/ai:implement --from .claude/project/fdr/FDR-03.md` |
+| Document what was built (handoff) | `/ai:cascade Add session caching` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
 | Validate diagram syntax | `/ai:mermaid validate graph TD; A-->B` |
 | Install coding rules | `/ai:setup --install-rules fastapi,nextjs` |
@@ -177,6 +178,20 @@ Convert an FDR or ADR into a DAG of implementation tasks with dependencies, crit
 Methods: `pragmatic` (default), `tdd`, `agile`, `kanban`, `shape-up`
 
 Outputs: Task DAG with Mermaid diagram, critical path, parallel tracks, per-task details with files and effort estimates, risk mitigation traceability. Saved to `.claude/project/implementation_plans/`.
+
+### Handoff Recording
+
+#### `/ai:cascade` — Implementation Record with Traceability
+
+Analyze cascade change logs and produce a structured record tracing back to ADR/FDR/IMPL.
+
+```bash
+/ai:cascade                                # All changes in current cascade
+/ai:cascade Add session caching feature    # With context label
+/ai:cascade --since 2h                     # Last 2 hours only
+```
+
+Outputs: Traceability table, task completion, edge case/risk coverage, session timeline, file:line citations, architecture impact diagram. Saved to `.claude/project/cascades/`.
 
 ### Task Delegation
 

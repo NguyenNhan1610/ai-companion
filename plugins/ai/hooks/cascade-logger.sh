@@ -1,6 +1,6 @@
 #!/bin/bash
 # PostToolUse hook: logs file changes to .claude/cascades/{branch}.md
-# Runs silently after Edit, Write, MultiEdit, and Bash tool uses.
+# Format: - [HH:MM:SS] ACTION `filepath` L{start}-{end}
 
 set -euo pipefail
 
@@ -22,14 +22,36 @@ safe_branch=$(echo "$branch" | sed 's/[^a-zA-Z0-9._-]/-/g')
 cascade_dir="$cwd/.claude/cascades"
 cascade_file="$cascade_dir/$safe_branch.md"
 
+# Timestamp
+ts=$(date '+%H:%M:%S')
+
 action=""
 file_path=""
 detail=""
+line_info=""
 
 case "$tool_name" in
   Edit)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
     action="EDIT"
+    # Try to find line number from old_string
+    old_string=$(echo "$input" | jq -r '.tool_input.old_string // empty')
+    if [ -n "$old_string" ] && [ -n "$file_path" ] && [ -f "$file_path" ]; then
+      # Get first line of old_string for grep
+      first_line=$(echo "$old_string" | head -1)
+      if [ -n "$first_line" ]; then
+        line_start=$(grep -nF "$first_line" "$file_path" 2>/dev/null | head -1 | cut -d: -f1 || true)
+        if [ -n "$line_start" ]; then
+          line_count=$(echo "$old_string" | wc -l)
+          line_end=$((line_start + line_count - 1))
+          if [ "$line_start" -eq "$line_end" ]; then
+            line_info=" L${line_start}"
+          else
+            line_info=" L${line_start}-${line_end}"
+          fi
+        fi
+      fi
+    fi
     ;;
   MultiEdit)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
@@ -37,19 +59,13 @@ case "$tool_name" in
     ;;
   Write)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
-    # Check if file existed before this write (tool_result may indicate)
-    if echo "$input" | jq -e '.tool_input.content' >/dev/null 2>&1; then
-      action="CREATE"
-    fi
+    action="CREATE"
     ;;
   Bash)
     cmd=$(echo "$input" | jq -r '.tool_input.command // empty')
-    # Detect file removal
     if echo "$cmd" | grep -qE '(^|\s)(rm|unlink|git\s+rm)\s'; then
       action="REMOVE"
-      # Try to extract file path from rm command
       file_path=$(echo "$cmd" | grep -oP '(?:rm|unlink|git\s+rm)\s+(?:-[a-zA-Z]*\s+)*\K[^\s;|&]+' | head -1 || true)
-    # Detect file move/rename
     elif echo "$cmd" | grep -qE '(^|\s)mv\s'; then
       action="MOVE"
       file_path=$(echo "$cmd" | grep -oP 'mv\s+(?:-[a-zA-Z]*\s+)*\K[^\s;|&]+' | head -1 || true)
@@ -83,8 +99,8 @@ if [ ! -f "$cascade_file" ]; then
   echo "" >> "$cascade_file"
 fi
 
-# Append entry
-echo "- $action \`$rel_path\`$detail" >> "$cascade_file"
+# Append entry with timestamp and line info
+echo "- [$ts] $action \`$rel_path\`${line_info}${detail}" >> "$cascade_file"
 
 # Silent success
 echo '{}'
