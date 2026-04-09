@@ -259,7 +259,7 @@ function installRules(cwd, specifiers) {
 function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "provider", "install-rules"],
-    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid"]
+    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "init"]
   });
 
   // Allow --provider to override the backend for setup checks
@@ -338,6 +338,68 @@ function handleSetup(argv, backend) {
         options.json
       );
     }
+    return;
+  }
+
+  // Handle --init
+  if (options.init) {
+    const projectDirs = [
+      ".claude/project/adr",
+      ".claude/project/fdr",
+      ".claude/project/implementation_plans",
+      ".claude/project/cascades",
+      ".claude/project/scripts/hypothesis",
+      ".claude/project/guidelines",
+      ".claude/project/workflows",
+      ".claude/cascades"
+    ];
+    const created = [];
+    for (const dir of projectDirs) {
+      const fullDir = path.join(cwd, dir);
+      if (!fs.existsSync(fullDir)) {
+        fs.mkdirSync(fullDir, { recursive: true });
+        created.push(dir);
+      }
+    }
+
+    // Append to CLAUDE.md if section doesn't exist
+    const claudeMdPath = path.join(cwd, "CLAUDE.md");
+    const marker = "## AI Companion Project Structure";
+    let claudeMdAction = "already configured";
+    const claudeSection = `
+${marker}
+
+- \`.claude/project/adr/\` — Architecture Decision Records (ADR-XX-{slug}.md)
+- \`.claude/project/fdr/\` — Feature Development Records (FDR-XX-{slug}.md)
+- \`.claude/project/implementation_plans/\` — DAG task plans (IMPL-XX-{slug}.md)
+- \`.claude/project/cascades/\` — Implementation records with traceability (REC-XX-{slug}.md)
+- \`.claude/project/scripts/hypothesis/\` — Hypothesis test scripts (H{NN}_{slug}.py + _result.json)
+- \`.claude/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
+- \`.claude/rules/\` — On-demand coding rules by stack (install via /ai:setup --install-rules)
+
+Document flow: ADR → FDR → IMPL → code → /ai:cascade (traces back to all)
+`;
+
+    const existingContent = fs.existsSync(claudeMdPath) ? fs.readFileSync(claudeMdPath, "utf8") : "";
+    if (!existingContent.includes(marker)) {
+      fs.appendFileSync(claudeMdPath, claudeSection, "utf8");
+      claudeMdAction = "section appended";
+    }
+
+    const lines = [`# Project Init\n`];
+    if (created.length > 0) {
+      lines.push(`Created ${created.length} directories: ${created.join(", ")}`);
+    } else {
+      lines.push("All directories already exist.");
+    }
+    lines.push(`CLAUDE.md: ${claudeMdAction}`);
+
+    outputResult(
+      options.json
+        ? { init: { created, claudeMd: claudeMdAction } }
+        : lines.join("\n") + "\n",
+      options.json
+    );
     return;
   }
 

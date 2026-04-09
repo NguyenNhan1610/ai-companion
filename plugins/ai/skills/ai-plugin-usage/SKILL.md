@@ -225,6 +225,7 @@ Write-capable by default.
 ### Setup & Configuration
 
 ```bash
+/ai:setup --init                       # Init project dirs + append to CLAUDE.md
 /ai:setup                              # Check backend readiness
 /ai:setup --install-rules fastapi      # Install FastAPI + Python rules
 /ai:setup --install-rules nextjs       # Install Next.js + TypeScript rules

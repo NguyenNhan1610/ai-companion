@@ -35,16 +35,70 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o hypothesis-tre
 ```
 
 ### Phase 3: TEST
-For each hypothesis, use the `ai-cli-runtime` skill to delegate a Codex task that:
-- Writes a targeted test script
-- Runs it against the codebase
-- Collects the result (confirmed/rejected/inconclusive)
+For each hypothesis, write a test script and save results as evidence:
 
-Run hypothesis tests in parallel when possible. Use one Codex task per hypothesis.
+1. Create directory: `mkdir -p .claude/project/scripts/hypothesis`
+2. For each hypothesis H{NN}, write a Python script:
+   - File: `.claude/project/scripts/hypothesis/H{NN}_{slug}.py`
+   - Must include structured docstring (see format below)
+   - Script prints JSON result to stdout
+3. Run the script: `python3 .claude/project/scripts/hypothesis/H{NN}_{slug}.py`
+4. Save result: `.claude/project/scripts/hypothesis/H{NN}_{slug}_result.json`
+5. Use `ai-cli-runtime` skill for complex tests that need Codex sandbox
 
-Example:
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/ai-companion.mjs" task "Test hypothesis: [description]. Write and run a script that [test description]. Report whether the hypothesis is confirmed, rejected, or inconclusive with evidence."
+Run hypothesis tests in parallel when possible.
+
+### Script Docstring Format (REQUIRED)
+
+Every hypothesis script MUST start with this docstring:
+
+```python
+"""
+Hypothesis: H{NN} - {title}
+Motivation: {why this hypothesis is plausible, cite evidence from Phase 1}
+Expected Outcome: {what the test result will be IF confirmed}
+Evaluation Criteria:
+  - CONFIRMED if: {specific condition}
+  - REJECTED if: {specific condition}
+  - INCONCLUSIVE if: {specific condition}
+References:
+  - Source: {file:line from codebase}
+  - Debug type: {bug|performance|flaky|behavior}
+"""
+
+import json
+import sys
+
+def test():
+    # ... test implementation ...
+    return {
+        "hypothesis_id": "H{NN}",
+        "title": "{title}",
+        "status": "confirmed",  # confirmed | rejected | inconclusive
+        "evidence": "{what was observed}",
+        "file": "{affected file}",
+        "line": 0
+    }
+
+if __name__ == "__main__":
+    result = test()
+    print(json.dumps(result, indent=2))
+```
+
+### Result JSON Format
+
+Each `H{NN}_{slug}_result.json`:
+```json
+{
+  "hypothesis_id": "H01",
+  "title": "SQL injection via f-string",
+  "status": "confirmed",
+  "evidence": "HTTP 500: syntax error near O'Brien",
+  "file": "api/views.py",
+  "line": 142,
+  "timestamp": "2026-04-09T06:30:00Z",
+  "script": "H01_sql_injection_via_fstring.py"
+}
 ```
 
 ### Phase 4: CONCLUDE
