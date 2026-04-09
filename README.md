@@ -11,6 +11,12 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
  ↑                   ↑      ↑       ↑      ↑       ↑       ↑
  └───────────────────┴──────┴───────┴──────┴───────┴───────┘
                          (all trace back)
+                              ↓
+                    /ai:knowledge extract
+                              ↓
+              patterns · lessons · decisions · antipatterns
+                              ↓
+                 Auto-suggested on next ADR/FDR/IMPL/debug
 ```
 
 ## What's New in This Fork
@@ -30,9 +36,10 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | Diagrams | None | **`/ai:mermaid`** — validate and render Mermaid.js diagrams |
 | Coding rules | None | **`/ai:setup --install-rules`** — auto-install rules into `.claude/rules/` |
 | Cascade logging | None | **PostToolUse + UserPromptSubmit hooks** — timestamps + file:line |
+| Knowledge base | None | **`/ai:knowledge`** — extract, index, search reusable knowledge + auto-suggest |
 | Project init | None | **`/ai:setup --init`** — creates project dirs + appends to CLAUDE.md |
 
-## Commands (16)
+## Commands (17)
 
 ### Review & Analysis
 
@@ -108,6 +115,12 @@ After `/ai:setup --init`:
 ├── todos/                    ← /ai:todo — Task tracking (YAML)
 ├── cascades/                 ← /ai:cascade — Implementation records
 ├── scripts/hypothesis/       ← /ai:debug — Hypothesis test scripts + results
+├── knowledge/                ← /ai:knowledge — Patterns, lessons, decisions, antipatterns
+│   ├── index.yaml            ← Master index for retrieval + trigger patterns
+│   ├── patterns/             ← Reusable implementation approaches
+│   ├── lessons/              ← What went wrong/right and why
+│   ├── decisions/            ← ADR outcome summaries
+│   └── antipatterns/         ← Project-specific bad patterns
 ├── guidelines/               ← Team guidelines
 └── workflows/                ← Team workflows
 
@@ -220,6 +233,23 @@ Pydantic-style YAML schema: status, priority, track, assignee, ticket, evidence 
 
 Traces implementation back to ADR/FDR/IMPL. Includes task completion status, edge case coverage, risk mitigation evidence, file:line citations. Saved to `.claude/project/cascades/REC-{NN}-{slug}.md`.
 
+## Knowledge Base
+
+Extract reusable knowledge from project experience and retrieve it when starting new work.
+
+```bash
+/ai:knowledge extract                       # Scan all docs, extract knowledge
+/ai:knowledge extract --from FDR-03         # From specific document
+/ai:knowledge search django performance     # Keyword search
+/ai:knowledge search --tag python,security  # Filter by tags
+/ai:knowledge suggest                       # What's relevant for current task?
+/ai:knowledge list                          # All entries
+```
+
+**Types:** `pattern` (reusable code), `lesson` (what went wrong/right), `decision` (ADR outcome), `antipattern` (bad pattern discovered)
+
+**Auto-suggestion (Phase 2):** FDR, ADR, IMPL, and debug agents automatically check the knowledge index and surface relevant past experience before starting analysis.
+
 ## Lint & Typecheck
 
 ```bash
@@ -315,7 +345,7 @@ Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>`
 
 ### What's the difference from the original?
 
-This fork adds 16 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, ADR/FDR/IMPL/TODO document flow, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
+This fork adds 17 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, ADR/FDR/IMPL/TODO document flow, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
 
 ## License
 
