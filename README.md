@@ -17,6 +17,10 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
               patterns · lessons · decisions · antipatterns
                               ↓
                  Auto-suggested on next ADR/FDR/IMPL/debug
+
+              /ai:trace --verify FDR-03
+                              ↓
+               READY TO SHIP / NOT READY / NEEDS REVIEW
 ```
 
 ## What's New in This Fork
@@ -37,6 +41,7 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | Coding rules | None | **`/ai:setup --install-rules`** — auto-install rules into `.claude/rules/` |
 | Cascade logging | None | **PostToolUse + UserPromptSubmit hooks** — timestamps + file:line |
 | Knowledge base | None | **`/ai:knowledge`** — extract, index, search reusable knowledge + auto-suggest |
+| Traceability | None | **`/ai:trace`** — verify completeness with 3 parallel sub-agents + ship/no-ship verdict |
 | Project init | None | **`/ai:setup --init`** — creates project dirs + appends to CLAUDE.md |
 
 ## Commands (18)
