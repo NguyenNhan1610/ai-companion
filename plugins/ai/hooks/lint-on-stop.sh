@@ -73,7 +73,7 @@ warnings=""
 if [ ${#py_files[@]} -gt 0 ]; then
   # Check if ruff is available
   if command -v ruff &>/dev/null; then
-    ruff_out=$(cd "$cwd" && ruff check --config "$LINT_CONFIGS/ruff.toml" --output-format text "${py_files[@]}" 2>&1) || true
+    ruff_out=$(cd "$cwd" && ruff check --config "$LINT_CONFIGS/ruff.toml" --output-format concise "${py_files[@]}" 2>&1) || true
     if [ -n "$ruff_out" ]; then
       errors+="## Ruff (Python lint)\n$ruff_out\n\n"
     fi
