@@ -35,14 +35,19 @@ case "$tool_name" in
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
     action="EDIT"
     # Try to find line number from old_string
-    old_string=$(echo "$input" | jq -r '.tool_input.old_string // empty')
-    if [ -n "$old_string" ] && [ -n "$file_path" ] && [ -f "$file_path" ]; then
-      # Get first line of old_string for grep
-      first_line=$(echo "$old_string" | head -1)
+    # Extract old_string to a temp file to preserve multi-line content
+    old_string_file=$(mktemp)
+    echo "$input" | jq -r '.tool_input.old_string // empty' > "$old_string_file"
+    if [ -s "$old_string_file" ] && [ -n "$file_path" ] && [ -f "$file_path" ]; then
+      # Count lines in old_string
+      line_count=$(wc -l < "$old_string_file")
+      # Add 1 if file doesn't end with newline (wc -l undercounts)
+      [ -n "$(tail -c 1 "$old_string_file")" ] && line_count=$((line_count + 1))
+      # Get first line for grep matching
+      first_line=$(head -1 "$old_string_file")
       if [ -n "$first_line" ]; then
         line_start=$(grep -nF "$first_line" "$file_path" 2>/dev/null | head -1 | cut -d: -f1 || true)
         if [ -n "$line_start" ]; then
-          line_count=$(echo "$old_string" | wc -l)
           line_end=$((line_start + line_count - 1))
           if [ "$line_start" -eq "$line_end" ]; then
             line_info=" L${line_start}"
@@ -52,6 +57,7 @@ case "$tool_name" in
         fi
       fi
     fi
+    rm -f "$old_string_file"
     ;;
   MultiEdit)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
@@ -83,9 +89,11 @@ case "$file_path" in
   */.claude/cascades/*) echo '{}'; exit 0 ;;
 esac
 
-# Make path relative to cwd if absolute
-if [[ "$file_path" == /* ]]; then
-  rel_path=$(realpath --relative-to="$cwd" "$file_path" 2>/dev/null || echo "$file_path")
+# Make path relative to cwd
+if [[ "$file_path" == "$cwd/"* ]]; then
+  rel_path="${file_path#"$cwd/"}"
+elif [[ "$file_path" == /* ]]; then
+  rel_path=$(python3 -c "import os.path; print(os.path.relpath('$file_path', '$cwd'))" 2>/dev/null || echo "$file_path")
 else
   rel_path="$file_path"
 fi
