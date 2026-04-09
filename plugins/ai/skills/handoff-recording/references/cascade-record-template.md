@@ -4,6 +4,8 @@
 **Branch:** {branch name}
 **Session segments:** {count}
 **Files changed:** {total} ({N} created, {N} edited, {N} removed)
+**Satisfaction rate:** {accepted}/{total prompts} ({%})
+**Incomplete requests:** {count}
 
 ---
 
@@ -43,14 +45,42 @@
 
 {One paragraph: what was built, why, and current state.}
 
+## Session Narrative
+
+### Intent Chain
+
+| # | Time | Signal | User Request | Outcome | Files |
+|---|------|--------|-------------|---------|-------|
+| 1 | [09:20] | [NEW] | Add session caching | Implemented | 2 created |
+| 2 | [09:22] | [REVISION] | Missing tenant isolation | Fixed | 2 edits |
+| 3 | [09:24] | [ACCEPTED] | Add tests | Implemented | 1 created |
+| 4 | [09:26] | [INCOMPLETE] | Concurrent access test missing | NOT DONE | 0 |
+
+### Quality Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total prompts | {N} |
+| Accepted on first try | {N}/{total requests} |
+| Revision rounds | {N} |
+| Incomplete requests | {N} |
+| Questions asked | {N} |
+| Satisfaction rate | {accepted}/{total} ({%}) |
+
 ## Session Timeline
 
-### [{HH:MM}] {User prompt text}
+### [{HH:MM}] [{TAG}] {User prompt text}
+
+> {Full prompt text from blockquote — the user's exact words}
+
 - [{HH:MM:SS}] Created `{file}` — {description}
   - `{file}:{lines}` — {specific implementation detail}
 - [{HH:MM:SS}] Edited `{file}` L{start}-{end} — {description}
 
-### [{HH:MM}] {Next user prompt}
+### [{HH:MM}] [{TAG}] {Next user prompt}
+
+> {Full prompt text}
+
 - [{HH:MM:SS}] Edited `{file}` L{start}-{end} — {description}
 
 ## Changes by Module
@@ -108,6 +138,14 @@ graph TD
 |------|-----------|--------|-----------|
 | {test_name} | `{file}:{lines}` | {what it tests} | {E{N} if applicable} |
 
+## Auto-Generated TODOs (from incomplete prompts)
+
+| ID | Title | Source | Priority | Full Prompt |
+|----|-------|--------|----------|-------------|
+| T-AUTO-01 | {summarized from incomplete prompt} | cascade [{HH:MM}] INCOMPLETE | P1 | "{user's exact prompt text}" |
+
+*These TODOs are auto-generated from cascade segments tagged [INCOMPLETE] — user requests that had no subsequent file edits.*
+
 ## Known Gaps
 
 | Gap | Related To | Priority | Next Step |
@@ -118,6 +156,7 @@ graph TD
 
 {Context for the next person picking this up. Include:}
 - What's working and verified
-- What's incomplete and why
+- What's incomplete and why (reference auto-TODOs above)
+- Revision history: what was rejected and why (from [REVISION] tags)
 - Any gotchas or surprises encountered
 - Links to source documents for full context

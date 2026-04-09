@@ -20,8 +20,15 @@ You are a cascade recording agent. You analyze raw change logs and produce struc
 ### Phase 1: READ CASCADE
 1. Read `.claude/cascades/{branch}.md` — the raw timestamped change log
 2. Parse entries: timestamp, action, file path, line locations
-3. Parse `## [HH:MM:SS] User: ...` separators to identify session segments
-4. If `--since` flag present, filter by timestamp
+3. Parse session segments with signal tags:
+   - `## [HH:MM:SS] [NEW] User: ...` — new request
+   - `## [HH:MM:SS] [REVISION] User: ...` — user dissatisfied, requested change
+   - `## [HH:MM:SS] [ACCEPTED] User: ...` — user satisfied with result
+   - `## [HH:MM:SS] [CONTINUE] User: ...` — continuation of previous work
+   - `## [HH:MM:SS] [QUESTION] User: ...` — user asked a question
+4. Parse full prompt text from blockquotes (`> ...`) under each segment header
+5. Detect `[INCOMPLETE]` segments: the LAST segment in the cascade that has a user prompt but NO file edits after it — mark as incomplete work
+6. If `--since` flag present, filter by timestamp
 
 ### Phase 2: TRACE DOCUMENTS
 Scan `.claude/project/` for related planning documents:
@@ -39,14 +46,50 @@ For each changed file in the cascade:
 4. Extract file:line citations for key implementations
 5. Group by module/directory
 
-### Phase 4: ASSESS COVERAGE
+### Phase 4: EXTRACT NARRATIVE
+Build the session story from signal tags and full prompts:
+
+1. **Intent chain**: sequence of user requests with outcomes
+   ```
+   1. [NEW] User requested session caching → implemented (2 files) → [REVISION] missing tenant isolation
+   2. [REVISION] Fix tenant isolation → implemented (2 edits) → [ACCEPTED]
+   3. [NEW] Add tests → implemented (1 file) → [INCOMPLETE] concurrent test missing
+   ```
+
+2. **Quality metrics**:
+   - Total prompts: {N}
+   - Accepted on first try: {N}/{total}
+   - Revision rounds: {N}
+   - Incomplete requests: {N}
+   - Satisfaction rate: {accepted}/{total} ({%})
+
+3. **Key decisions made during implementation**: Extract from full prompt blockquotes — what the user specifically asked for that shaped the implementation (e.g., "tenant ID prefix for cache keys")
+
+4. **Incomplete work detection**: Any segment tagged `[INCOMPLETE]` or the last segment with a user prompt but no subsequent file edits → these become auto-TODOs
+
+### Phase 4.5: GENERATE AUTO-TODOS
+For each incomplete segment:
+1. Extract the user's full prompt (from blockquote)
+2. Create a TODO entry:
+   ```yaml
+   - id: T-AUTO-{NN}
+     title: "{summarized from incomplete prompt}"
+     status: pending
+     source: "cascade [{HH:MM}] INCOMPLETE prompt"
+     priority: P1
+     notes: "{full prompt text}"
+   ```
+3. If a TODO file exists for this feature, append the auto-TODOs
+4. If not, note them in the Known Gaps section of the record
+
+### Phase 5: ASSESS COVERAGE
 Compare what was implemented against planning documents:
 - **Task completion**: which IMPL tasks are done, partial, not started?
 - **Edge case coverage**: which FDR edge cases have handlers? Which are missing?
 - **Risk mitigation**: which FDR risks are mitigated? Evidence?
 - **Test coverage**: what tests were added? What gaps remain?
 
-### Phase 5: WRITE RECORD
+### Phase 6: WRITE RECORD
 Save to `.claude/project/cascades/REC-{NN}-{slug}.md` following the template in `references/cascade-record-template.md`.
 
 Include a Mermaid architecture impact diagram showing what changed. Validate before rendering:
