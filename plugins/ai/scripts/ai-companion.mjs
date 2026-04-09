@@ -12,6 +12,8 @@ import { loadPluginConfig, resolveProviderAndModel } from "./lib/config.mjs";
 import { createCodexBackend } from "./lib/codex/index.mjs";
 import { createCopilotBackend } from "./lib/copilot/index.mjs";
 
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+
 // Register available backends at startup
 registerBackend(createCodexBackend());
 registerBackend(createCopilotBackend());
@@ -256,7 +258,7 @@ function installRules(cwd, specifiers) {
   return { installed, skipped };
 }
 
-function handleSetup(argv, backend) {
+async function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "provider", "install-rules"],
     booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "init", "ui"]
@@ -468,9 +470,13 @@ Document flow: ADR → FDR → IMPL → TODO → code → test → lint → casc
       }
     }
 
+    const jsonResult = { init: { created, claudeMd: claudeMdAction } };
+    if (lines.length > 0) {
+      jsonResult.init.lines = lines;
+    }
     outputResult(
       options.json
-        ? { init: { created, claudeMd: claudeMdAction } }
+        ? jsonResult
         : lines.join("\n") + "\n",
       options.json
     );
@@ -1543,7 +1549,7 @@ async function main() {
 
   switch (subcommand) {
     case "setup":
-      handleSetup(argv, backend);
+      await handleSetup(argv, backend);
       break;
     case "review":
       await handleReview(argv, backend, resolvedModel);
