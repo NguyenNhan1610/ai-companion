@@ -26,6 +26,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Plan a feature with risk assessment | `/ai:fdr Add multi-tenant session caching` |
 | Generate implementation checklist | `/ai:implement --from .claude/project/fdr/FDR-03.md` |
 | Document what was built (handoff) | `/ai:cascade Add session caching` |
+| Extract/search project knowledge | `/ai:knowledge extract` or `/ai:knowledge search django` |
 | Track task progress | `/ai:todo` or `/ai:todo --from IMPL-03` |
 | Lint/typecheck changed files | `/ai:lint` or `/ai:lint --fix` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
@@ -129,6 +130,22 @@ Cost: `2*N+1` backend calls (3 roles = 7 calls). Max 7 roles.
 ```
 
 Inline content — no file needed. Outputs SVG (default) or PNG. Requires mmdc (`/ai:setup --install-mermaid`).
+
+### Knowledge Base
+
+#### `/ai:knowledge` — Extract and Retrieve Project Knowledge
+
+```bash
+/ai:knowledge extract                       # Scan all docs, extract knowledge
+/ai:knowledge extract --from FDR-03         # Extract from specific document
+/ai:knowledge search django performance     # Search by keywords
+/ai:knowledge search --tag python,security  # Filter by tags
+/ai:knowledge suggest                       # Suggest for current context
+/ai:knowledge list                          # List all entries
+```
+
+Types: patterns, lessons, decisions, antipatterns. Auto-suggested when starting FDR/ADR/IMPL/debug.
+Saved to `.claude/project/knowledge/`.
 
 ### Architecture Decision Records
 

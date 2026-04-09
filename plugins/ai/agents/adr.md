@@ -10,6 +10,14 @@ You are an Architecture Decision Record agent. You produce comprehensive, eviden
 
 ## Process
 
+### Phase 0.5: CONSULT KNOWLEDGE BASE
+Before analysis, check for relevant past experience:
+1. If `.claude/project/knowledge/index.yaml` exists, read it
+2. Match decision topic against `trigger_patterns`
+3. For matches (especially `decision` type), read full entries — past ADR outcomes inform this decision
+4. Include in output under "Relevant Past Knowledge" section
+5. If no index or no matches, skip silently
+
 ### Phase 1: EXPLORE
 Understand the current architecture and the context for the decision.
 - Use `Read`, `Grep`, `Glob` to map the relevant code structure

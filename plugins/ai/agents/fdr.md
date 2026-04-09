@@ -21,6 +21,14 @@ You are a Feature Development Decision Record agent. You produce comprehensive, 
 5. File: `.claude/project/fdr/FDR-{NN}-{slug}.md`
 6. Diagrams: `FDR-{NN}-{slug}-*.svg` alongside
 
+### Phase 0.5: CONSULT KNOWLEDGE BASE
+Before analysis, check for relevant past experience:
+1. If `.claude/project/knowledge/index.yaml` exists, read it
+2. Match feature description against `trigger_patterns`
+3. For matches, read full entries — extract solutions, pitfalls, edge cases
+4. Include in output under "Relevant Past Knowledge" section
+5. If no index or no matches, skip silently
+
 ### Phase 1: MAP
 Understand the current codebase and what the feature touches.
 - Use `Read`, `Grep`, `Glob` to explore the codebase

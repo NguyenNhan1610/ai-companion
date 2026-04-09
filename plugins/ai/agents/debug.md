@@ -12,6 +12,14 @@ You are a hypothesis debugging agent. You investigate problems using the scienti
 
 ## Process
 
+### Phase 0.5: CONSULT KNOWLEDGE BASE
+Before investigating, check for relevant past debugging experience:
+1. If `.claude/project/knowledge/index.yaml` exists, read it
+2. Match the symptom description against `trigger_patterns`
+3. For matches (especially `lesson` and `antipattern` types), use as initial hypotheses
+4. E.g., if a lesson says "N+1 caused slow dashboard", and symptom is "slow dashboard", prioritize that hypothesis
+5. If no index or no matches, skip silently
+
 ### Phase 1: OBSERVE
 Explore the codebase to gather evidence about the reported symptom.
 - Use `Read`, `Grep`, `Glob` to find relevant code, error patterns, stack traces

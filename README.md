@@ -55,6 +55,7 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | `/ai:implement` | DAG-based implementation plans from FDR/ADR |
 | `/ai:todo` | Task tracking with status, tickets, and traceability |
 | `/ai:cascade` | Handoff records with traceability to all documents |
+| `/ai:knowledge` | Extract, index, search reusable knowledge from project docs |
 | `/ai:mermaid` | Validate and render Mermaid.js diagrams |
 
 ### Delegation & Management
