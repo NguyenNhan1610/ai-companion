@@ -8,6 +8,13 @@ input=$(cat)
 cwd=$(echo "$input" | jq -r '.cwd // empty')
 
 [ -z "$cwd" ] && { echo '{}'; exit 0; }
+[ ! -d "$cwd" ] && { echo '{}'; exit 0; }
+
+# Anchor on the git repo root, not whatever subdirectory $cwd happens to be.
+# Falls back to $cwd if we're not inside a git checkout.
+project_root=$(cd "$cwd" && git rev-parse --show-toplevel 2>/dev/null || true)
+[ -z "$project_root" ] && project_root="$cwd"
+cwd="$project_root"
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(readlink -f "$0")")")}"
 LINT_CONFIGS="$PLUGIN_ROOT/lint-configs"
@@ -31,12 +38,28 @@ py_files=()
 ts_files=()
 all_changed=()
 
+cwd_abs=$(cd "$cwd" && pwd -P 2>/dev/null || echo "$cwd")
+
 while IFS= read -r line; do
   filepath=$(echo "$line" | grep -oP '`\K[^`]+' | head -1 || true)
   [ -z "$filepath" ] && continue
 
+  # Reject absolute paths and any path containing .. segments — cascade entries
+  # should be cwd-relative. A path like "../../../tmp/..." can resolve to a real
+  # file outside the project and poison the lint run.
+  case "$filepath" in
+    /*|*..*) continue ;;
+  esac
+
   full_path="$cwd/$filepath"
   [ ! -f "$full_path" ] && continue
+
+  # Final containment check: resolved path must live under $cwd_abs.
+  resolved=$(cd "$(dirname "$full_path")" 2>/dev/null && pwd -P)/$(basename "$full_path")
+  case "$resolved" in
+    "$cwd_abs"/*) ;;
+    *) continue ;;
+  esac
 
   # Skip excluded directories
   case "$filepath" in
@@ -73,9 +96,16 @@ warnings=""
 if [ ${#py_files[@]} -gt 0 ]; then
   # Check if ruff is available
   if command -v ruff &>/dev/null; then
-    ruff_out=$(cd "$cwd" && ruff check --config "$LINT_CONFIGS/ruff.toml" --output-format concise "${py_files[@]}" 2>&1) || true
-    if [ -n "$ruff_out" ]; then
-      errors+="## Ruff (Python lint)\n$ruff_out\n\n"
+    ruff_rc=0
+    ruff_raw=$(cd "$cwd" && ruff check --config "$LINT_CONFIGS/ruff.toml" --output-format concise "${py_files[@]}" 2>&1) || ruff_rc=$?
+    if [ "$ruff_rc" -ne 0 ] && [ -n "$ruff_raw" ]; then
+      ruff_total=$(echo "$ruff_raw" | wc -l)
+      ruff_out=$(echo "$ruff_raw" | head -20)
+      errors+="## Ruff (Python lint)\n$ruff_out\n"
+      if [ "$ruff_total" -gt 20 ]; then
+        errors+="... ($((ruff_total - 20)) more ruff findings truncated)\n"
+      fi
+      errors+="\n"
     fi
   fi
 
@@ -83,14 +113,20 @@ if [ ${#py_files[@]} -gt 0 ]; then
   if command -v pyright &>/dev/null; then
     pyright_out=$(cd "$cwd" && pyright --project "$LINT_CONFIGS/pyrightconfig.json" "${py_files[@]}" 2>&1) || true
     if echo "$pyright_out" | grep -q "error:"; then
-      pyright_errors=$(echo "$pyright_out" | grep "error:" || true)
-      errors+="## Pyright (Python typecheck)\n$pyright_errors\n\n"
+      pyright_all=$(echo "$pyright_out" | grep "error:" || true)
+      pyright_total=$(echo "$pyright_all" | wc -l)
+      pyright_errors=$(echo "$pyright_all" | head -15)
+      errors+="## Pyright (Python typecheck)\n$pyright_errors\n"
+      if [ "$pyright_total" -gt 15 ]; then
+        errors+="... ($((pyright_total - 15)) more pyright errors truncated)\n"
+      fi
+      errors+="\n"
     fi
   fi
 
   # Check Python compilation
   for pyfile in "${py_files[@]}"; do
-    compile_out=$(cd "$cwd" && python3 -m py_compile "$pyfile" 2>&1) || true
+    compile_out=$(cd "$cwd" && python3 -m py_compile "$pyfile" 2>&1 | head -5) || true
     if [ -n "$compile_out" ]; then
       errors+="## Python compile error\n$compile_out\n\n"
     fi
@@ -103,12 +139,18 @@ if [ ${#ts_files[@]} -gt 0 ]; then
   if command -v eslint &>/dev/null; then
     # Use project eslint config if exists, otherwise use bundled
     if [ -f "$cwd/eslint.config.mjs" ] || [ -f "$cwd/eslint.config.js" ] || [ -f "$cwd/.eslintrc.js" ] || [ -f "$cwd/.eslintrc.json" ]; then
-      eslint_out=$(cd "$cwd" && eslint --quiet "${ts_files[@]}" 2>&1) || true
+      eslint_raw=$(cd "$cwd" && eslint --quiet "${ts_files[@]}" 2>&1) || true
     else
-      eslint_out=$(cd "$cwd" && eslint --config "$LINT_CONFIGS/eslint.config.mjs" --quiet "${ts_files[@]}" 2>&1) || true
+      eslint_raw=$(cd "$cwd" && eslint --config "$LINT_CONFIGS/eslint.config.mjs" --quiet "${ts_files[@]}" 2>&1) || true
     fi
-    if [ -n "$eslint_out" ]; then
-      errors+="## ESLint (TypeScript/JS lint)\n$eslint_out\n\n"
+    if [ -n "$eslint_raw" ]; then
+      eslint_total=$(echo "$eslint_raw" | wc -l)
+      eslint_out=$(echo "$eslint_raw" | head -25)
+      errors+="## ESLint (TypeScript/JS lint)\n$eslint_out\n"
+      if [ "$eslint_total" -gt 25 ]; then
+        errors+="... ($((eslint_total - 25)) more eslint lines truncated)\n"
+      fi
+      errors+="\n"
     fi
   fi
 
@@ -149,6 +191,16 @@ report+="Checked $file_count files ($py_count Python, $ts_count TypeScript/JS) f
 report+="$errors"
 report+="Fix the errors above before stopping. Run \`/ai:lint\` for the full report."
 
+# Hard cap total message size to stay well under Claude Code's hook output limit (~16KB).
+# systemMessage gets JSON-escaped, so keep raw payload under ~10KB.
+rendered=$(echo -e "$report")
+max_bytes=10000
+if [ "${#rendered}" -gt "$max_bytes" ]; then
+  rendered="${rendered:0:$max_bytes}
+
+... (report truncated; run \`/ai:lint\` for the full output)"
+fi
+
 # Output as systemMessage to Claude
-echo "{\"continue\": false, \"systemMessage\": \"$(echo -e "$report" | sed 's/"/\\"/g' | tr '\n' ' ')\"}"
+echo "{\"continue\": false, \"systemMessage\": \"$(printf '%s' "$rendered" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n' ' ')\"}"
 exit 2
