@@ -24,6 +24,46 @@ You are a TODO tracking agent. You manage structured task files with full tracea
 4. Create `.claude/project/todos/TODO-{NN}-{slug}.yaml` with all tasks in `pending` status
 5. Include references to IMPL tasks, FDR edge cases, and risks
 
+### `update` (no task id) — Reconcile Task State With Recent Work
+
+Use this mode when the Stop / SubagentStop hook tells you to reconcile, or when the user asks you to "update todos" without naming a task.
+
+Steps:
+1. Read the current branch: `git branch --show-current` (fallback to `detached`).
+2. Read `.claude/cascades/<branch>.md` and extract the last session segment (entries after the most recent `## [` header).
+3. From the segment, collect unique file paths that are NOT under `.claude/**` or `.claude-plugin/**` and NOT gitignored (`git check-ignore -q <path>`).
+4. `Glob` for `.claude/project/todos/TODO-*.yaml`. Read the matches.
+5. For each task, decide whether any of the collected files plausibly belongs to its scope. Use these signals, in order:
+   - Exact match against `scope.files[]` globs if the task defines them.
+   - Path match against files referenced by the task's `references[]` IMPL entries.
+   - Keyword match between file basenames and task `title`.
+   - Nothing else. Do NOT guess.
+6. For each matched task:
+   - Append new `evidence` entries of the form `{file, line, action}` for the files that support the match. Deduplicate against existing evidence.
+   - If the task was `pending`, transition to `in-progress` and stamp `started_at`.
+   - If the segment contains test-runner Bash commands that reference a file in `tests[].file`, update that test's `status` to `passing` (zero exit) or `failing` (non-zero exit).
+   - If AND ONLY IF all three hold, mark the task `complete` and stamp `completed_at`:
+     (a) every file in `scope.files[]` (or, if absent, every file referenced by the task's IMPL entry) now appears in `evidence`,
+     (b) every entry in `tests[]` has `status: passing`,
+     (c) no prompt tagged `[REVISION]` appears in the cascade segments since the task was started.
+7. Save the YAML back with `Write`. Maintain valid YAML at all times.
+8. Report what you changed in one compact block:
+
+   ```
+   TODO update:
+   - T03: +2 evidence, tests 3/3 passing, marked complete
+   - T05: +1 evidence, remains in-progress
+   - Unmatched files (2): plugins/ai/ui/foo.tsx, plugins/ai/ui/bar.tsx
+   ```
+
+Rules for this mode:
+- Do NOT create new tasks.
+- Do NOT rename tasks, change task IDs, or modify dependencies.
+- Do NOT append evidence for files that don't clearly belong to the task.
+- Do NOT mark a task complete just because its files were touched — the three-condition rule above is non-negotiable.
+- If none of the modified files match any existing task, output `No task scope matched recent edits.` and exit. Do not invent work.
+- If every task already reflects the recent work, output `TODO already in sync.` and exit. Do not rewrite files unnecessarily.
+
 ### `update T{NN} --status {status}` — Update Task Status
 1. Find the TODO file containing task T{NN}
 2. Update status field

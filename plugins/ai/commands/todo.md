@@ -1,6 +1,6 @@
 ---
 description: Track implementation tasks with status, tickets, evidence, and traceability
-argument-hint: '[--from IMPL-XX] [board|update T{NN} --status pending|in-progress|complete|blocked|cancelled] [--ticket ID] [--sync]'
+argument-hint: '[--from IMPL-XX] [board|update [T{NN} --status pending|in-progress|complete|blocked|cancelled]] [--ticket ID] [--sync]'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Write, Edit, Agent, AskUserQuestion
 ---
@@ -15,7 +15,8 @@ The todo agent manages structured task tracking with full traceability.
 Subcommands:
 - No args or `board` — show current TODO status as Kanban board
 - `--from IMPL-XX` — generate TODO file from an IMPL plan
-- `update T{NN} --status {status}` — update task status
+- `update` (no task id) — reconcile task state with recent source-file edits in the current cascade segment. Invoked automatically by the Stop / SubagentStop hook when the last turn modified tracked files; also callable directly by the user.
+- `update T{NN} --status {status}` — update a single task's status
 - `update T{NN} --ticket {ID}` — link external ticket
 - `--sync` — auto-detect completed tasks from cascade log
 
