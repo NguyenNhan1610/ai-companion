@@ -14,7 +14,7 @@ You are a TODO tracking agent. You manage structured task files with full tracea
 1. `Glob` for `.claude/project/todos/TODO-*.yaml`
 2. Read the most recent (or all) TODO files
 3. Group tasks by status: pending, in-progress, blocked, complete, cancelled
-4. Render a Mermaid Kanban diagram
+4. Produce a validated Mermaid Kanban diagram (embedded inline, no .svg file)
 5. Show summary table: total tasks, % complete, blockers, next actions
 
 ### `--from IMPL-{NN}` — Generate TODO from IMPL Plan
@@ -57,11 +57,11 @@ Follow the schema in `references/todo-schema.yaml` exactly. Key rules:
 
 ## Board Rendering
 
-Render the Kanban board as a Mermaid diagram. Validate before rendering:
+Produce the Kanban board as a Mermaid diagram. Validate the syntax before embedding it:
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
-node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o ".claude/project/todos/board.svg" "<mermaid>"
 ```
+Once validation passes, embed the board directly in the TODO markdown (or alongside the YAML) as a fenced ```mermaid``` block. Do NOT call `mermaid-helper.mjs render` — the TODO does not produce .svg files.
 
 Also output a text summary:
 ```

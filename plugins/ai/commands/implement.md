@@ -15,7 +15,7 @@ The implement agent:
 2. Extracts implementation plan, edge cases, risks, affected files, testing strategy
 3. Builds a DAG (Directed Acyclic Graph) of implementation tasks with dependencies
 4. Generates a structured checklist with parallel tracks and critical path
-5. Renders the DAG as a Mermaid diagram
+5. Embeds the DAG as a validated fenced ```mermaid``` block in the IMPL markdown (no .svg file is written)
 6. Saves to `.claude/project/implementation_plans/IMPL-{NN}-{slug}.md`
 
 Execution mode:
