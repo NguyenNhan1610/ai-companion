@@ -36,6 +36,20 @@ cascade_file="$cwd/.claude/cascades/$safe_branch.md"
 # No cascade = nothing to reconcile.
 [ ! -f "$cascade_file" ] && { echo '{}'; exit 0; }
 
+# Scope filter: the TODO-reconciliation nudge is only meaningful when the
+# user is actually running an implementation workflow. Scan the recent
+# cascade for a user prompt blockquote that invoked /ai:implement,
+# /ai:plan, or /ai:implementation-plan. Recent = within the last 500
+# lines, which is roughly the last 20 turns of heavy work.
+#
+# If no such trigger is present, exit silently. No implementation
+# workflow = no TODO board to maintain = no nudge.
+if ! tail -n 500 "$cascade_file" 2>/dev/null \
+    | grep -qE '^>[[:space:]]*/ai:(implement|plan|implementation)'; then
+  echo '{}'
+  exit 0
+fi
+
 # Extract the last session segment (entries after the most recent "## [" header).
 last_segment=$(tac "$cascade_file" | sed '/^## \[/q' | tac)
 

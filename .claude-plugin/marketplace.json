@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "AI backend plugins (Codex, Copilot) to use in Claude Code for delegation and code review.",
-    "version": "4.2.2"
+    "version": "4.2.3"
   },
   "plugins": [
     {
       "name": "ai",
       "description": "Use Codex or Copilot from Claude Code to review code or delegate tasks.",
-      "version": "4.2.2",
+      "version": "4.2.3",
       "author": {
         "name": "OpenAI"
       },
