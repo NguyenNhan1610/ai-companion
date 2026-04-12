@@ -115,6 +115,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/auto-validate-on-stage.sh\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/todo-reminder-on-stop.sh\"",
             "timeout": 10
           },
