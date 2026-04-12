@@ -1,5 +1,5 @@
 ---
-description: Generate a traceability report linking decisions, plans, tasks, code, tests, and knowledge
+description: Generate a traceability report linking decisions, plans, tasks, code, tests, and knowledge. Use when user wants to verify feature completeness, audit evidence, check readiness to ship, or trace a decision through implementation.
 argument-hint: '[--verify] [--query "natural language question"] <document-id or feature name>'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion

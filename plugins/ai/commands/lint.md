@@ -1,5 +1,5 @@
 ---
-description: Run batch lint and typecheck on recently changed files
+description: Run batch lint and typecheck on recently changed files. Use when user asks to lint, typecheck, check code quality, run ruff, eslint, pyright, or tsc.
 argument-hint: '[--fix] [--all] [file paths...]'
 allowed-tools: Bash(node:*), Bash(ruff:*), Bash(eslint:*), Bash(tsc:*), Bash(pyright:*), Bash(python3:*), Read, Glob, AskUserQuestion
 ---

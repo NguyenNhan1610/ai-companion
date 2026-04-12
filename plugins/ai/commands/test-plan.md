@@ -1,5 +1,5 @@
 ---
-description: Generate a structured test plan with traceability matrices from an FDR document
+description: Generate a structured test plan with traceability matrices from an FDR document. Use when user wants to create a test plan, define test cases from a feature spec, or bridge FDR to IMPL with test coverage.
 argument-hint: '--from <path-to-fdr> [--adr <path-to-adr>]'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion

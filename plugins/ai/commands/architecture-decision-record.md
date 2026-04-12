@@ -1,5 +1,5 @@
 ---
-description: Generate a deep technical Architecture Decision Record with Mermaid diagrams
+description: Generate a deep technical Architecture Decision Record with Mermaid diagrams. Use when user wants to document an architecture decision, compare design alternatives, evaluate trade-offs, or asks about system design documentation or technical decision records.
 argument-hint: '[--scope module|system|api|data|infra] <decision topic or question>'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion

@@ -1,5 +1,5 @@
 ---
-description: Track implementation tasks with status, tickets, evidence, and traceability
+description: Track implementation tasks with status, tickets, evidence, and traceability. Use when user wants to track task progress, create todos, update task status, view kanban board, sync from cascade, or link tickets.
 argument-hint: '[--from IMPL-XX] [board|update [T{NN} --status pending|in-progress|complete|blocked|cancelled]] [--ticket ID] [--sync]'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Write, Edit, Agent, AskUserQuestion

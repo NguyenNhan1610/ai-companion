@@ -1,5 +1,5 @@
 ---
-description: Generate a DAG-based implementation plan from an FDR or ADR document
+description: Generate a DAG-based implementation plan from an FDR or ADR document. Use when user wants to create an implementation checklist, break down a feature into tasks with dependencies, identify critical path, or plan parallel work tracks.
 argument-hint: '--from <path-to-fdr-or-adr> [--method pragmatic|tdd|agile|kanban|shape-up]'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion

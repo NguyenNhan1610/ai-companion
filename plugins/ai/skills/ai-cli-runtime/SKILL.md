@@ -1,6 +1,6 @@
 ---
 name: ai-cli-runtime
-description: Internal helper contract for calling the ai-companion runtime from Claude Code
+description: Internal runtime helper for the rescue and debug agents
 user-invocable: false
 ---
 

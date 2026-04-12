@@ -1,5 +1,5 @@
 ---
-description: Analyze cascade change log and produce a structured implementation record with traceability
+description: Analyze cascade change log and produce a structured implementation record with traceability. Use when user wants to document what was built, create a handoff record, or trace implementation to planning documents.
 argument-hint: '[--since 1h|2h|today] [feature description or context]'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion

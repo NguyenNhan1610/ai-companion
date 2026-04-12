@@ -1,5 +1,5 @@
 ---
-description: Validate whether a downstream planning document fulfills its upstream document's requirements
+description: Validate whether a downstream planning document fulfills its upstream document's requirements. Use when user wants to check document coverage, verify stage transition completeness, or validate after generating a new document.
 argument-hint: '<upstream-doc-id> [→|->|to] <downstream-doc-id>'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion

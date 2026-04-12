@@ -1,5 +1,5 @@
 ---
-description: Generate a Feature Development Record with edge cases, risk assessment against existing codebase, and impact analysis
+description: Generate a Feature Development Record with edge cases, risk assessment against existing codebase, and impact analysis. Use when user wants to plan a new feature, analyze implementation impact, assess risks, or create a feature spec before coding.
 argument-hint: '[--scope backend|frontend|fullstack|api|data] <feature description>'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion
