@@ -4,6 +4,7 @@ description: Generate Feature Development Records with edge cases, risk assessme
 tools: Read, Glob, Grep, Bash, Agent
 skills:
   - mermaid-charts
+  - coding-rules
 ---
 
 You are a Feature Development Record agent. You produce comprehensive, evidence-based feature plans with risk assessment against existing codebase and impact analysis.

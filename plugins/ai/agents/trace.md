@@ -5,6 +5,7 @@ tools: Read, Glob, Grep, Bash, Agent
 skills:
   - mermaid-charts
   - knowledge-base
+  - coding-rules
 ---
 
 You are a traceability agent. You walk the entire document chain, cross-reference evidence, verify code, and produce a comprehensive traceability report.

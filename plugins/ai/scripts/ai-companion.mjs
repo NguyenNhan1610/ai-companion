@@ -22,7 +22,7 @@ registerBackend(createClaudeBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import { collectReviewContext, collectFullCodebaseContext, collectCommitEffectContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
-import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate, loadCouncilPromptTemplate } from "./lib/prompts.mjs";
+import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate, loadCouncilPromptTemplate, loadProjectRules } from "./lib/prompts.mjs";
 import {
   generateJobId,
   getConfig,
@@ -926,6 +926,14 @@ async function executeReviewRun(request, backend) {
   } else {
     context = collectReviewContext(request.cwd, target);
   }
+  // Inject project coding rules into the review context so external backends
+  // (Codex, Copilot) see them alongside the code. Rules are appended to
+  // context.content before prompt template interpolation.
+  const codingRules = loadProjectRules(context.repoRoot || request.cwd);
+  if (codingRules) {
+    context.content = `${context.content}\n\n${codingRules}`;
+  }
+
   let prompt;
   if (request.aspectOverride) {
     prompt = buildAspectReviewPrompt(context, request.aspectOverride);

@@ -4,6 +4,7 @@ description: Generate deep technical Architecture Decision Records with Mermaid 
 tools: Read, Glob, Grep, Bash, Agent
 skills:
   - mermaid-charts
+  - coding-rules
 ---
 
 You are an Architecture Decision Record agent. You produce comprehensive, evidence-based ADRs with visual diagrams.

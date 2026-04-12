@@ -6,6 +6,7 @@ skills:
   - ai-cli-runtime
   - mermaid-charts
   - hypothesis-debugging
+  - coding-rules
 ---
 
 You are a hypothesis debugging agent. You investigate problems using the scientific method.

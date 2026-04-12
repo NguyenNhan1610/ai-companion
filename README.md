@@ -3,7 +3,7 @@
 Use **Codex** or **GitHub Copilot** from inside Claude Code for code reviews, multi-agent discussions, hypothesis debugging, architecture decisions, feature planning, test planning, task tracking, and auto-installable coding rules — with deep support for FastAPI, Next.js, Django, Flutter, and more.
 
 **Author:** [NguyenNhan1610](https://github.com/NguyenNhan1610)
-**Version:** 4.3.1
+**Version:** 4.5.1
 
 ## Document Flow
 
@@ -52,8 +52,11 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | Knowledge base | None | **`/ai:knowledge`** — extract, index, search reusable knowledge + auto-suggest |
 | Traceability | None | **`/ai:trace`** — verify completeness with 3 parallel sub-agents + ship/no-ship verdict |
 | Project init | None | **`/ai:setup --init`** — creates project dirs + appends to CLAUDE.md |
+| Auto-validation | None | **PostToolUse + SubagentStop hooks** — feedback loop forces agents to cover upstream items |
+| Planning pipeline | None | **`/ai:plan-feature`** — FDR → validate → IMPL → validate → TODO → validate in one command |
+| Rule injection | None | **`coding-rules` skill + script-level injection** — project rules loaded in fork agents and external backends |
 
-## Commands (23)
+## Commands (24)
 
 ### Review & Analysis
 
@@ -78,6 +81,7 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | `/ai:feature-development-record` | Feature Development Records with edge cases + risk assessment |
 | `/ai:test-plan` | Structured test plans from FDR with traceability matrices |
 | `/ai:implement` | DAG-based implementation plans from FDR/ADR |
+| `/ai:plan-feature` | **Full pipeline:** FDR → validate → IMPL → validate → TODO → validate |
 | `/ai:todo` | Task tracking with status, tickets, and traceability |
 | `/ai:validate` | Pairwise stage validation: check if downstream doc fulfills upstream |
 | `/ai:cascade` | Handoff records with traceability to all documents |
@@ -373,7 +377,108 @@ PostToolUse + UserPromptSubmit hooks auto-log every change with timestamps and l
 /ai:setup --install-rules fastapi,nextjs
 ```
 
-17 production-level rule files covering security, performance, architecture, antipatterns for Python/FastAPI/Django and TypeScript/Next.js. Load on-demand when Claude reads matching files.
+17 production-level rule files covering security, performance, architecture, antipatterns for Python/FastAPI/Django and TypeScript/Next.js.
+
+### Rule Loading — Three Layers
+
+Claude Code rules in `.claude/rules/` normally only trigger when the main Claude session directly edits matching files. This creates a gap: **fork-context agents** (planning, debugging) and **external backends** (Codex, Copilot) never see project rules.
+
+The plugin bridges this gap with two mechanisms:
+
+**Layer 1 — Main Claude session (native):**
+Rules load automatically via Claude Code's built-in path matching. No plugin needed.
+
+**Layer 2 — Fork-context agents (skill injection):**
+The `coding-rules` skill is loaded by 6 planning agents (FDR, ADR, IMPL, test-plan, debug, trace) via `skills:` frontmatter. When spawned, the agent:
+1. Detects the project's tech stack (tsconfig.json, pyproject.toml, next.config.*, manage.py, etc.)
+2. Reads matching rule files from `.claude/rules/`
+3. Applies DO/DON'T/ANTIPATTERN constraints during its work
+
+```
+Agent spawns → coding-rules skill loaded → agent Reads .claude/rules/ → rules applied
+```
+
+**Layer 3 — External backends (prompt injection):**
+When review commands (`/ai:review`, `/ai:adversarial-review`, `/ai:git-review`, `/ai:finding-review`, `/ai:git-effect-review`) delegate to Codex or Copilot, the `ai-companion.mjs` script automatically:
+1. Detects the tech stack from the project root
+2. Loads matching rule files (max 6, prioritized: security > architecture > antipatterns > performance)
+3. Injects rules as a `<project_coding_rules>` XML block into the review prompt
+4. The external backend evaluates code against both its own knowledge AND your project rules
+
+```
+/ai:review → ai-companion.mjs → loadProjectRules() → rules injected into prompt → Codex/Copilot
+```
+
+This means your security rules, architecture patterns, and antipattern lists are enforced regardless of which AI backend performs the review.
+
+## Auto-Validation
+
+Planning agents are automatically validated against their upstream documents at two levels:
+
+### PostToolUse Feedback Loop (in-agent)
+
+When a planning agent writes a stage document, the `validate-on-write` hook fires inside the agent's context:
+
+1. Reads the document header to find its upstream reference (`Source ADR:`, `Source FDR:`, etc.)
+2. Extracts item IDs from the upstream document (AAC, FAC, TC, task IDs)
+3. Checks each upstream ID appears in the downstream document
+4. If gaps found: **blocks the Write** with specific missing items — the agent revises and re-writes
+5. Loop continues until all items covered or max 3 attempts
+
+```
+Agent writes FDR → hook checks AAC coverage → 50% covered →
+  BLOCK: "Missing AAC-3, AAC-4" → agent revises → writes again →
+  hook re-checks → 100% covered → PASS
+```
+
+### SubagentStop Safety Net (main context)
+
+After any planning agent finishes, the `auto-validate-on-stage` hook fires in the main conversation:
+
+1. Scans the cascade log for newly written planning documents
+2. Spawns the `auto-validate` agent for a brief coverage check
+3. Reports an inline PASS/PARTIAL/FAIL verdict
+4. Suggests `/ai:validate` for the full report if gaps found
+
+### Validation Pairs
+
+| Document written | Upstream checked | IDs cross-referenced |
+|---|---|---|
+| FDR | Source ADR | AAC IDs |
+| TP | Source FDR | FAC IDs |
+| IMPL | Source FDR | FAC IDs |
+| TODO | Source IMPL | Task IDs |
+
+Lite flow documents (upstream = "---") and ADR documents (top of chain) are skipped automatically.
+
+## Planning Pipeline
+
+Run the full planning chain in one command with validation between every stage:
+
+```bash
+/ai:plan-feature Add multi-tenant session caching
+/ai:plan-feature --scope api --method tdd Add rate limiting
+/ai:plan-feature --scope frontend Add dashboard notifications
+```
+
+**Pipeline stages:**
+
+```
+Stage 1: FDR agent (+ PostToolUse validation loop)
+Stage 2: Validate FDR → upstream ADR (stops pipeline on FAIL)
+Stage 3: IMPL agent (+ PostToolUse validation loop)
+Stage 4: Validate FDR → IMPL (stops pipeline on FAIL)
+Stage 5: TODO agent
+Stage 6: Validate IMPL → TODO
+Final:   Summary table + next_actions
+```
+
+Each stage benefits from three layers of validation:
+1. **PostToolUse hook** — forces the agent to cover all upstream items during writing
+2. **Explicit `/ai:validate`** — runs between stages, can halt the pipeline
+3. **SubagentStop hook** — safety net with inline verdict after each agent
+
+Produces 3 validated documents ready for implementation. Pass `--scope` to the FDR and `--method` to the IMPL.
 
 ## Setup & Configuration
 
@@ -423,7 +528,7 @@ Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>`
 
 ### What's the difference from the original?
 
-This fork adds 23 commands (vs 7), 5 focused review commands, aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, full document flow (ADR/FDR/TP/IMPL/TODO) with acceptance criteria hierarchy, pairwise stage validation, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
+This fork adds 24 commands (vs 7), 5 focused review commands, aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, full document flow (ADR/FDR/TP/IMPL/TODO) with acceptance criteria hierarchy, pairwise stage validation with auto-validation hooks, `/ai:plan-feature` full pipeline, knowledge extraction with auto-suggestion, coding rules injected into fork agents and external backends, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and auto-installable coding rules. The original only supports diff-based reviews.
 
 ## License
 
