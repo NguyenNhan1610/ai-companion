@@ -1,7 +1,7 @@
 {
   "name": "ai-backends",
   "owner": {
-    "name": "OpenAI"
+    "name": "NguyenNhan1610"
   },
   "metadata": {
     "description": "AI backend plugins (Codex, Copilot) to use in Claude Code for delegation and code review.",
@@ -13,7 +13,7 @@
       "description": "Use Codex or Copilot from Claude Code to review code or delegate tasks.",
       "version": "4.3.1",
       "author": {
-        "name": "OpenAI"
+        "name": "NguyenNhan1610"
       },
       "source": "./plugins/ai"
     }
