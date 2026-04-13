@@ -147,6 +147,22 @@ function updateStats(logEntry) {
     }
   }
 
+  stats.sessions = {};
+  for (const [id, s] of sessions) {
+    stats.sessions[id.slice(0, 8)] = {
+      requests: s.requests,
+      model: s.model,
+      cacheRead: s.cacheRead,
+      cacheCreate: s.cacheCreate,
+      input: s.input,
+      output: s.output,
+      thinking: s.thinking,
+      toolCalls: Object.keys(s.tools).length,
+      topTools: Object.entries(s.tools).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([n, c]) => `${n}(${c})`),
+      duration: s.startTime && s.lastTime ? Math.round((new Date(s.lastTime) - new Date(s.startTime)) / 1000) : 0,
+    };
+  }
+
   stats.updatedAt = new Date().toISOString();
 }
 
@@ -292,11 +308,179 @@ function cleanupOldLogs() {
   } catch { /* log dir may not exist yet */ }
 }
 
+// ── Request/Response Summarization ───────────────────────────────────
+
+/**
+ * Extract structured summary from the request body for logging.
+ * Captures: system prompt info, message breakdown, tools, thinking config.
+ * Does NOT store full content — only metadata and structure.
+ */
+function summarizeRequest(body) {
+  if (!body || body._raw) return null;
+
+  const summary = {};
+
+  // System prompt
+  const system = body.system;
+  if (system) {
+    if (typeof system === "string") {
+      summary.system_length = system.length;
+    } else if (Array.isArray(system)) {
+      summary.system_blocks = system.length;
+      summary.system_length = system.reduce((n, b) => n + (b.text?.length || 0), 0);
+    }
+  }
+
+  // Messages breakdown: count by role, total content length, image count
+  const messages = body.messages;
+  if (Array.isArray(messages)) {
+    const roles = {};
+    let totalContentLen = 0;
+    let imageCount = 0;
+    let toolResultCount = 0;
+    let toolUseCount = 0;
+
+    for (const msg of messages) {
+      roles[msg.role] = (roles[msg.role] || 0) + 1;
+      const content = msg.content;
+      if (typeof content === "string") {
+        totalContentLen += content.length;
+      } else if (Array.isArray(content)) {
+        for (const block of content) {
+          if (block.type === "text") totalContentLen += (block.text?.length || 0);
+          else if (block.type === "image") imageCount++;
+          else if (block.type === "tool_result") toolResultCount++;
+          else if (block.type === "tool_use") toolUseCount++;
+        }
+      }
+    }
+
+    summary.messages = {
+      count: messages.length,
+      roles,
+      content_length: totalContentLen,
+      images: imageCount || undefined,
+      tool_results: toolResultCount || undefined,
+      tool_uses: toolUseCount || undefined,
+    };
+  }
+
+  // Tools
+  const tools = body.tools;
+  if (Array.isArray(tools) && tools.length > 0) {
+    summary.tools = {
+      count: tools.length,
+      names: tools.map(t => t.name).filter(Boolean),
+    };
+  }
+
+  // Thinking / extended thinking config
+  if (body.thinking) {
+    summary.thinking = body.thinking;
+  }
+
+  // Max tokens
+  if (body.max_tokens) summary.max_tokens = body.max_tokens;
+
+  // Temperature
+  if (body.temperature != null) summary.temperature = body.temperature;
+
+  return summary;
+}
+
+/**
+ * Extract structured content summary from the response body.
+ * Captures: text, thinking, tool_use blocks with names/lengths.
+ */
+function summarizeResponseContent(responseBody) {
+  if (!responseBody) return null;
+
+  const content = responseBody.content;
+  if (!Array.isArray(content)) return null;
+
+  const summary = {
+    blocks: [],
+    text_length: 0,
+    thinking_length: 0,
+    tool_calls: [],
+  };
+
+  for (const block of content) {
+    const type = block.type;
+    if (type === "text") {
+      const len = (block.text || "").length;
+      summary.blocks.push({ type: "text", length: len });
+      summary.text_length += len;
+    } else if (type === "thinking") {
+      const len = (block.thinking || "").length;
+      summary.blocks.push({ type: "thinking", length: len });
+      summary.thinking_length += len;
+    } else if (type === "tool_use") {
+      summary.blocks.push({ type: "tool_use", name: block.name, id: block.id });
+      summary.tool_calls.push({ name: block.name, id: block.id });
+    } else {
+      summary.blocks.push({ type });
+    }
+  }
+
+  if (summary.tool_calls.length === 0) delete summary.tool_calls;
+
+  return summary;
+}
+
+// ── Session Tracking ─────────────────────────────────────────────────
+
+/** @type {Map<string, { requests: number, cost: number, cacheRead: number, cacheCreate: number, input: number, output: number, tools: Record<string, number>, startTime: string, lastTime: string, model: string }>} */
+const sessions = new Map();
+
+function trackSession(logEntry) {
+  const sessionId = logEntry.session_id;
+  if (!sessionId) return;
+
+  const usage = logEntry.response_usage || {};
+  let session = sessions.get(sessionId);
+  if (!session) {
+    session = {
+      requests: 0, cost: 0, cacheRead: 0, cacheCreate: 0,
+      input: 0, output: 0, thinking: 0,
+      tools: {}, startTime: logEntry.timestamp, lastTime: logEntry.timestamp,
+      model: logEntry.model,
+    };
+    sessions.set(sessionId, session);
+  }
+
+  session.requests++;
+  session.lastTime = logEntry.timestamp;
+  session.cacheRead += usage.cache_read_input_tokens || 0;
+  session.cacheCreate += usage.cache_creation_input_tokens || 0;
+  session.input += usage.input_tokens || 0;
+  session.output += usage.output_tokens || 0;
+
+  // Track tool calls from response summary
+  const rc = logEntry.response_content;
+  if (rc?.tool_calls) {
+    for (const tc of rc.tool_calls) {
+      session.tools[tc.name] = (session.tools[tc.name] || 0) + 1;
+    }
+  }
+  if (rc?.thinking_length) {
+    session.thinking += rc.thinking_length;
+  }
+}
+
 // ── SSE Parsing ──────────────────────────────────────────────────────
 
 function parseSSEChunks(chunks) {
   const textParts = [];
+  const thinkingParts = [];
+  const toolCalls = [];
   const usage = {};
+  const blocks = [];
+  let currentBlockType = null;
+  let currentBlockName = null;
+  let currentBlockId = null;
+  let currentTextLen = 0;
+  let currentThinkingLen = 0;
 
   for (const chunk of chunks) {
     if (!chunk.startsWith("data: ")) continue;
@@ -305,11 +489,34 @@ function parseSSEChunks(chunks) {
     try { event = JSON.parse(payload); } catch { continue; }
     const etype = event.type || "";
 
-    if (etype === "content_block_delta") {
+    if (etype === "content_block_start") {
+      const cb = event.content_block || {};
+      currentBlockType = cb.type;
+      currentBlockName = cb.name || null;
+      currentBlockId = cb.id || null;
+      currentTextLen = 0;
+      currentThinkingLen = 0;
+      if (cb.type === "tool_use") {
+        toolCalls.push({ name: cb.name, id: cb.id });
+      }
+    } else if (etype === "content_block_delta") {
       const delta = event.delta;
       if (delta?.type === "text_delta") {
         textParts.push(delta.text || "");
+        currentTextLen += (delta.text || "").length;
+      } else if (delta?.type === "thinking_delta") {
+        thinkingParts.push(delta.thinking || "");
+        currentThinkingLen += (delta.thinking || "").length;
       }
+    } else if (etype === "content_block_stop") {
+      if (currentBlockType === "text") {
+        blocks.push({ type: "text", length: currentTextLen });
+      } else if (currentBlockType === "thinking") {
+        blocks.push({ type: "thinking", length: currentThinkingLen });
+      } else if (currentBlockType === "tool_use") {
+        blocks.push({ type: "tool_use", name: currentBlockName, id: currentBlockId });
+      }
+      currentBlockType = null;
     } else if (etype === "message_delta") {
       if (event.usage) Object.assign(usage, event.usage);
     } else if (etype === "message_start") {
@@ -318,7 +525,14 @@ function parseSSEChunks(chunks) {
     }
   }
 
-  return { text: textParts.join(""), usage };
+  const responseContent = {
+    blocks,
+    text_length: textParts.join("").length,
+    thinking_length: thinkingParts.join("").length,
+  };
+  if (toolCalls.length > 0) responseContent.tool_calls = toolCalls;
+
+  return { text: textParts.join(""), usage, responseContent };
 }
 
 // ── Header Helpers ───────────────────────────────────────────────────
@@ -426,6 +640,8 @@ function relayFullResponse(upstreamRes, clientRes, logEntry, startTime) {
         );
         logEntry.response_body = respJson;
         logEntry.response_usage = respJson?.usage || null;
+        logEntry.response_content = summarizeResponseContent(respJson);
+        trackSession(logEntry);
         appendLog(logEntry);
       });
     }
@@ -488,7 +704,7 @@ function relayStreamResponse(upstreamRes, clientRes, logEntry, startTime) {
 
     // Off hot path: parse SSE chunks and log
     if (logEntry) {
-      const { text, usage } = parseSSEChunks(sseChunks);
+      const { text, usage, responseContent } = parseSSEChunks(sseChunks);
 
       logEntry.elapsed_s = Math.round(elapsed * 1000) / 1000;
       logEntry.response_status = upstreamRes.statusCode;
@@ -497,7 +713,9 @@ function relayStreamResponse(upstreamRes, clientRes, logEntry, startTime) {
       );
       logEntry.response_usage = usage;
       logEntry.response_text = text;
+      logEntry.response_content = responseContent;
       logEntry.response_chunk_count = sseChunks.length;
+      trackSession(logEntry);
       appendLog(logEntry);
     }
   });
@@ -538,14 +756,19 @@ async function handlePost(req, res) {
   const model = body.model || "unknown";
   const isStreaming = body.stream === true;
 
-  // Build log entry with stripped auth headers
+  // Extract session ID from headers
+  const sessionId = req.headers["x-claude-code-session-id"] || null;
+
+  // Build log entry with stripped auth headers + structured request summary
   const logEntry = {
     timestamp: new Date().toISOString(),
     method: "POST",
     path: req.url,
     model,
     is_streaming: isStreaming,
+    session_id: sessionId,
     request_headers: stripAuthHeaders(req.headers),
+    request_summary: summarizeRequest(body),
     request_body: rawBody.length > MAX_BODY_LOG_BYTES
       ? { _truncated: true, _size: rawBody.length, model, stream: isStreaming }
       : body,
