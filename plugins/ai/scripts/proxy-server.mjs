@@ -24,6 +24,7 @@ import https from "node:https";
 import path from "node:path";
 import process from "node:process";
 import { URL } from "node:url";
+import zlib from "node:zlib";
 
 // ── Configuration ────────────────────────────────────────────────────
 
@@ -401,6 +402,7 @@ function relayFullResponse(upstreamRes, clientRes, logEntry, startTime) {
     const responseBytes = Buffer.concat(chunks);
     const elapsed = (Date.now() - startTime) / 1000;
 
+    // Relay original (possibly compressed) bytes to client
     try {
       clientRes.writeHead(upstreamRes.statusCode, upstreamRes.statusMessage);
       relayResponseHeaders(upstreamRes, clientRes);
@@ -408,26 +410,43 @@ function relayFullResponse(upstreamRes, clientRes, logEntry, startTime) {
       clientRes.end(responseBytes);
     } catch { /* client disconnected */ }
 
-    // Off hot path: log the response
+    // Off hot path: decompress if needed, then log
     if (logEntry) {
-      let respJson;
-      try { respJson = JSON.parse(responseBytes.toString("utf8")); } catch {
-        respJson = { _raw: responseBytes.toString("utf8", 0, Math.min(responseBytes.length, 2048)) };
-      }
+      const encoding = (upstreamRes.headers["content-encoding"] || "").toLowerCase();
+      decompressBuffer(responseBytes, encoding).then((decompressed) => {
+        let respJson;
+        try { respJson = JSON.parse(decompressed.toString("utf8")); } catch {
+          respJson = { _raw: decompressed.toString("utf8", 0, Math.min(decompressed.length, 2048)) };
+        }
 
-      logEntry.elapsed_s = Math.round(elapsed * 1000) / 1000;
-      logEntry.response_status = upstreamRes.statusCode;
-      logEntry.response_headers = Object.fromEntries(
-        Object.entries(upstreamRes.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : v])
-      );
-      logEntry.response_body = respJson;
-      logEntry.response_usage = respJson?.usage || null;
-      appendLog(logEntry);
+        logEntry.elapsed_s = Math.round(elapsed * 1000) / 1000;
+        logEntry.response_status = upstreamRes.statusCode;
+        logEntry.response_headers = Object.fromEntries(
+          Object.entries(upstreamRes.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : v])
+        );
+        logEntry.response_body = respJson;
+        logEntry.response_usage = respJson?.usage || null;
+        appendLog(logEntry);
+      });
     }
   });
 
   upstreamRes.on("error", () => {
     try { clientRes.end(); } catch { /* ignore */ }
+  });
+}
+
+function decompressBuffer(buf, encoding) {
+  return new Promise((resolve) => {
+    if (encoding === "gzip" || encoding === "x-gzip") {
+      zlib.gunzip(buf, (err, result) => resolve(err ? buf : result));
+    } else if (encoding === "br") {
+      zlib.brotliDecompress(buf, (err, result) => resolve(err ? buf : result));
+    } else if (encoding === "deflate") {
+      zlib.inflate(buf, (err, result) => resolve(err ? buf : result));
+    } else {
+      resolve(buf);
+    }
   });
 }
 
