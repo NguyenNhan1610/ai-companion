@@ -40,9 +40,23 @@ If `--install-statusline` is provided:
 If `--install-proxy` is provided:
 - Starts a reverse proxy between Claude Code and api.anthropic.com for API telemetry.
 - Logs all requests/responses to `.claude/proxy-logs/` as daily JSONL files.
-- Sets `ANTHROPIC_BASE_URL` to route traffic through the proxy.
 - Use `/ai:status --proxy` to view live metrics (cache hit%, quota burn, cost).
 - The proxy is pure passthrough — it does NOT modify requests or responses.
+- **IMPORTANT — Activate routing:** After the proxy starts, you MUST also write `ANTHROPIC_BASE_URL` into `~/.claude/settings.json` so Claude Code routes traffic through the proxy. Read the current settings, add/update the `env` object with `ANTHROPIC_BASE_URL`, and write it back:
+  ```bash
+  node -e "
+    const fs = require('fs');
+    const p = require('path').join(process.env.HOME || '/root', '.claude', 'settings.json');
+    let s = {}; try { s = JSON.parse(fs.readFileSync(p, 'utf8')); } catch {}
+    s.env = s.env || {};
+    s.env.ANTHROPIC_BASE_URL = 'http://127.0.0.1:{PORT}';
+    fs.writeFileSync(p, JSON.stringify(s, null, 2) + '\n');
+    console.log('Set ANTHROPIC_BASE_URL in', p);
+  "
+  ```
+  Replace `{PORT}` with the `port` value from the JSON result.
+- Then tell the user: "Proxy is running. **Restart Claude Code** (`/exit` then relaunch) to activate API routing through the proxy. On restart, the statusline will show proxy metrics."
+- On subsequent sessions, the SessionStart hook also injects the env var automatically if the proxy process is still alive.
 
 Output rules:
 - Present the final setup output to the user.

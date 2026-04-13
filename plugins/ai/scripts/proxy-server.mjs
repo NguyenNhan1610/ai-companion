@@ -49,12 +49,17 @@ const HOP_BY_HOP = new Set([
 const STRIP_REQUEST = new Set(["host"]);
 
 /** Headers stripped from upstream response before relaying to client. */
-const STRIP_RESPONSE = new Set(["transfer-encoding", "connection", "content-encoding"]);
+const STRIP_RESPONSE = new Set(["transfer-encoding", "connection"]);
 
 /** Auth headers stripped from JSONL log entries (still forwarded to upstream). */
 const STRIP_LOG_HEADERS = new Set([
   "x-api-key", "authorization", "cookie", "proxy-authorization",
 ]);
+
+// ── Keep-alive agents for connection reuse ────────────────────────────
+
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 10 });
 
 // ── Uptime ───────────────────────────────────────────────────────────
 
@@ -574,12 +579,14 @@ function forwardHeaders(incomingHeaders) {
   return out;
 }
 
-function relayResponseHeaders(upstreamRes, clientRes) {
+function buildRelayResponseHeaders(upstreamRes) {
+  const headers = {};
   for (const [k, v] of Object.entries(upstreamRes.headers)) {
     if (!STRIP_RESPONSE.has(k.toLowerCase())) {
-      try { clientRes.setHeader(k, v); } catch { /* skip invalid headers */ }
+      headers[k] = v;
     }
   }
+  return headers;
 }
 
 // ── Request Body Collector ───────────────────────────────────────────
@@ -606,18 +613,21 @@ function collectBody(req, maxBytes = 10 * 1024 * 1024) {
 
 function makeUpstreamRequest(method, reqPath, headers, body) {
   const upstream = new URL(reqPath, UPSTREAM_URL);
-  const transport = upstream.protocol === "https:" ? https : http;
+  const isHttps = upstream.protocol === "https:";
+  const transport = isHttps ? https : http;
 
   return new Promise((resolve, reject) => {
     const opts = {
       hostname: upstream.hostname,
-      port: upstream.port || (upstream.protocol === "https:" ? 443 : 80),
+      port: upstream.port || (isHttps ? 443 : 80),
       path: upstream.pathname + upstream.search,
       method,
       headers,
       timeout: UPSTREAM_TIMEOUT_MS,
+      agent: isHttps ? httpsAgent : httpAgent,
     };
 
+    opts.agent = upstream.protocol === "https:" ? httpsAgent : httpAgent;
     const upReq = transport.request(opts, (upRes) => resolve(upRes));
     upReq.on("error", reject);
     upReq.on("timeout", () => {
@@ -644,9 +654,9 @@ function relayFullResponse(upstreamRes, clientRes, logEntry, startTime) {
 
     // Relay original (possibly compressed) bytes to client
     try {
-      clientRes.writeHead(upstreamRes.statusCode, upstreamRes.statusMessage);
-      relayResponseHeaders(upstreamRes, clientRes);
-      clientRes.setHeader("Content-Length", responseBytes.length);
+      const headers = buildRelayResponseHeaders(upstreamRes);
+      headers["content-length"] = String(responseBytes.length);
+      clientRes.writeHead(upstreamRes.statusCode, upstreamRes.statusMessage, headers);
       clientRes.end(responseBytes);
     } catch { /* client disconnected */ }
 
@@ -695,8 +705,11 @@ function decompressBuffer(buf, encoding) {
 function relayStreamResponse(upstreamRes, clientRes, logEntry, startTime) {
   // Write response headers to client FIRST — then pipe chunks at wire speed
   try {
-    clientRes.writeHead(upstreamRes.statusCode, upstreamRes.statusMessage);
-    relayResponseHeaders(upstreamRes, clientRes);
+    clientRes.writeHead(
+      upstreamRes.statusCode,
+      upstreamRes.statusMessage,
+      buildRelayResponseHeaders(upstreamRes)
+    );
   } catch {
     return; // client already gone
   }

@@ -411,22 +411,37 @@ async function handleSetup(argv, backend) {
       return;
     }
 
-    // If in active session, inject ANTHROPIC_BASE_URL
+    // Persist ANTHROPIC_BASE_URL in settings.json so it activates on next restart
+    const proxyUrl = `http://127.0.0.1:${session.port}`;
+    const settingsPath = path.join(process.env.HOME || "/root", ".claude", "settings.json");
+    let needsRestart = true;
+    try {
+      let settings = {};
+      try { settings = JSON.parse(fs.readFileSync(settingsPath, "utf8")); } catch { /* fresh */ }
+      settings.env = settings.env || {};
+      settings.env.ANTHROPIC_BASE_URL = proxyUrl;
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n", "utf8");
+    } catch { /* ignore settings write failure */ }
+
+    // Also try CLAUDE_ENV_FILE for immediate effect in current session
     if (process.env.CLAUDE_ENV_FILE) {
       const existingBaseUrl = process.env.ANTHROPIC_BASE_URL || "";
       if (!existingBaseUrl || existingBaseUrl.includes("localhost") || existingBaseUrl.includes("127.0.0.1")) {
         fs.appendFileSync(
           process.env.CLAUDE_ENV_FILE,
-          `export ANTHROPIC_BASE_URL='http://127.0.0.1:${session.port}'\n`,
+          `export ANTHROPIC_BASE_URL='${proxyUrl}'\n`,
           "utf8"
         );
+        needsRestart = false;
       }
     }
 
+    const restartMsg = needsRestart ? "\n\n**Restart Claude Code** to activate API routing through the proxy." : "";
+
     outputResult(
       options.json
-        ? { installProxy: { installed: true, port: session.port, pid: session.pid, logDir: session.logDir, statsFile: session.statsFile } }
-        : `# Install Proxy\n\nProxy started on port ${session.port} (pid ${session.pid}).\nLog directory: ${session.logDir}\nStats file: ${session.statsFile}\n\nAPI requests are now routed through the proxy for telemetry.\nUse \`/ai:status --proxy\` to view live metrics.\n`,
+        ? { installProxy: { installed: true, port: session.port, pid: session.pid, logDir: session.logDir, statsFile: session.statsFile, needsRestart } }
+        : `# Install Proxy\n\nProxy started on port ${session.port} (pid ${session.pid}).\nLog directory: ${session.logDir}\nStats file: ${session.statsFile}${restartMsg}\n\nUse \`/ai:status --proxy\` to view live metrics.\n`,
       options.json
     );
     return;
