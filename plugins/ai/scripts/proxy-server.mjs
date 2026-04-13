@@ -117,6 +117,30 @@ function updateStats(logEntry) {
       stats.cacheHitRate = stats.cacheSummary.cacheReadTokens / totalCached;
     }
 
+    // Input summary from request
+    const rs = logEntry.request_summary || {};
+    const inputSummary = {
+      systemLength: rs.system_length || 0,
+      systemBlocks: rs.system_blocks || 0,
+      messageCount: rs.messages?.count || 0,
+      roles: rs.messages?.roles || {},
+      contentLength: rs.messages?.content_length || 0,
+      toolCount: rs.tools?.count || 0,
+      thinkingBudget: rs.thinking?.budget_tokens || 0,
+      images: rs.messages?.images || 0,
+      toolResults: rs.messages?.tool_results || 0,
+      maxTokens: rs.max_tokens || 0,
+    };
+
+    // Response content from output
+    const rc = logEntry.response_content || {};
+    const outputDetail = {
+      thinkingLength: rc.thinking_length || 0,
+      textLength: rc.text_length || 0,
+      toolCalls: (rc.tool_calls || []).map(t => t.name),
+      blocks: (rc.blocks || []).map(b => b.type),
+    };
+
     stats.lastRequest = {
       timestamp: logEntry.timestamp,
       model: logEntry.model,
@@ -125,6 +149,8 @@ function updateStats(logEntry) {
       outputTokens: usage.output_tokens || 0,
       cacheReadTokens: cacheRead,
       cacheCreationTokens: cacheCreate,
+      inputSummary,
+      outputDetail,
     };
   }
 
