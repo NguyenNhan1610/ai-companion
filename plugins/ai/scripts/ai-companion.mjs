@@ -284,7 +284,7 @@ function installRules(cwd, specifiers) {
 async function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "provider", "install-rules"],
-    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "init", "ui"]
+    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "install-statusline", "init", "ui"]
   });
 
   // Allow --provider to override the backend for setup checks
@@ -363,6 +363,36 @@ async function handleSetup(argv, backend) {
         options.json
       );
     }
+    return;
+  }
+
+  // Handle --install-statusline
+  if (options["install-statusline"]) {
+    const handlerPath = path.resolve(SCRIPT_DIR, "statusline-handler.mjs");
+    if (!fs.existsSync(handlerPath)) {
+      outputResult(
+        options.json
+          ? { installStatusline: { installed: false, error: "statusline-handler.mjs not found" } }
+          : `# Install Statusline\n\nstatusline-handler.mjs not found at ${handlerPath}\n`,
+        options.json
+      );
+      return;
+    }
+    const settingsPath = path.join(process.env.HOME || "/root", ".claude", "settings.json");
+    let settings = {};
+    try { settings = JSON.parse(fs.readFileSync(settingsPath, "utf8")); } catch { /* fresh */ }
+    settings.statusLine = {
+      type: "command",
+      command: `node "${handlerPath}"`,
+    };
+    fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n", "utf8");
+    outputResult(
+      options.json
+        ? { installStatusline: { installed: true, path: handlerPath } }
+        : `# Install Statusline\n\nWrote statusLine config to ${settingsPath}.\nRestart Claude Code to activate.\n`,
+      options.json
+    );
     return;
   }
 

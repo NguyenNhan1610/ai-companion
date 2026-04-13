@@ -1,6 +1,6 @@
 ---
 description: Check whether the AI backend CLI is ready and optionally init project, toggle review gate, install coding rules, or install Mermaid.js
-argument-hint: '[--init] [--init --ui] [--provider codex|copilot|claude] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid]'
+argument-hint: '[--init] [--init --ui] [--provider codex|copilot|claude] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid] [--install-statusline]'
 allowed-tools: Bash(node:*), Bash(npm:*), AskUserQuestion
 ---
 
@@ -31,6 +31,11 @@ If `--install-rules` is provided:
   - `--install-rules fastapi` — installs FastAPI + Python rules
   - `--install-rules nextjs` — installs Next.js + TypeScript rules
   - `--install-rules fastapi,nextjs` — installs both stacks
+
+If `--install-statusline` is provided:
+- Writes the `statusLine` config to `~/.claude/settings.json` pointing at the plugin's `statusline-handler.mjs`.
+- The handler reads native token metrics (input, output, cache creation, cache read) and session metrics (cost, duration, lines) from Claude Code's stdin contract.
+- User must restart Claude Code after installation.
 
 Output rules:
 - Present the final setup output to the user.
