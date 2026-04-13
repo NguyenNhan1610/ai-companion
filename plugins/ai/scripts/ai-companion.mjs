@@ -22,6 +22,8 @@ registerBackend(createClaudeBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import { collectReviewContext, collectFullCodebaseContext, collectCommitEffectContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
+import { startProxy, loadProxySession, isProxyRunning, stopProxy } from "./lib/proxy-lifecycle.mjs";
+import { readProxyStats } from "./lib/proxy-stats.mjs";
 import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate, loadCouncilPromptTemplate, loadProjectRules } from "./lib/prompts.mjs";
 import {
   generateJobId,
@@ -284,7 +286,7 @@ function installRules(cwd, specifiers) {
 async function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "provider", "install-rules"],
-    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "install-statusline", "init", "ui"]
+    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "install-statusline", "install-proxy", "init", "ui"]
   });
 
   // Allow --provider to override the backend for setup checks
@@ -391,6 +393,40 @@ async function handleSetup(argv, backend) {
       options.json
         ? { installStatusline: { installed: true, path: handlerPath } }
         : `# Install Statusline\n\nWrote statusLine config to ${settingsPath}.\nRestart Claude Code to activate.\n`,
+      options.json
+    );
+    return;
+  }
+
+  // Handle --install-proxy
+  if (options["install-proxy"]) {
+    const session = await startProxy(cwd);
+    if (session.error) {
+      outputResult(
+        options.json
+          ? { installProxy: { installed: false, error: session.error } }
+          : `# Install Proxy\n\nFailed: ${session.error}\n`,
+        options.json
+      );
+      return;
+    }
+
+    // If in active session, inject ANTHROPIC_BASE_URL
+    if (process.env.CLAUDE_ENV_FILE) {
+      const existingBaseUrl = process.env.ANTHROPIC_BASE_URL || "";
+      if (!existingBaseUrl || existingBaseUrl.includes("localhost") || existingBaseUrl.includes("127.0.0.1")) {
+        fs.appendFileSync(
+          process.env.CLAUDE_ENV_FILE,
+          `export ANTHROPIC_BASE_URL='http://127.0.0.1:${session.port}'\n`,
+          "utf8"
+        );
+      }
+    }
+
+    outputResult(
+      options.json
+        ? { installProxy: { installed: true, port: session.port, pid: session.pid, logDir: session.logDir, statsFile: session.statsFile } }
+        : `# Install Proxy\n\nProxy started on port ${session.port} (pid ${session.pid}).\nLog directory: ${session.logDir}\nStats file: ${session.statsFile}\n\nAPI requests are now routed through the proxy for telemetry.\nUse \`/ai:status --proxy\` to view live metrics.\n`,
       options.json
     );
     return;
@@ -1517,13 +1553,79 @@ async function handleTaskWorker(argv, backend) {
   );
 }
 
+function fmtTokenCount(n) {
+  if (!n && n !== 0) return "0";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(0)}k`;
+  return String(n);
+}
+
 async function handleStatus(argv) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "timeout-ms", "poll-interval-ms"],
-    booleanOptions: ["json", "all", "wait"]
+    booleanOptions: ["json", "all", "wait", "proxy"]
   });
 
   const cwd = resolveCommandCwd(options);
+
+  // Handle --proxy: show proxy-specific metrics
+  if (options.proxy) {
+    const proxySession = loadProxySession(cwd);
+    if (!proxySession) {
+      outputResult(
+        options.json
+          ? { proxy: { active: false } }
+          : "# Proxy Status\n\nProxy not running. Install with `/ai:setup --install-proxy`\n",
+        options.json
+      );
+      return;
+    }
+
+    const running = await isProxyRunning(cwd);
+    const proxyStats = readProxyStats(cwd, 0);
+
+    if (options.json) {
+      outputResult({ proxy: { active: running, session: proxySession, stats: proxyStats } }, true);
+      return;
+    }
+
+    const lines = ["# Proxy Status\n"];
+    lines.push(`**Status:** ${running ? "Running" : "Stopped"}`);
+    lines.push(`**Port:** ${proxySession.port} | **PID:** ${proxySession.pid}`);
+    lines.push(`**Started:** ${proxySession.startedAt || "unknown"}`);
+    lines.push(`**Log dir:** ${proxySession.logDir}`);
+
+    if (proxyStats) {
+      lines.push("");
+      lines.push("## Metrics");
+      lines.push(`| Metric | Value |`);
+      lines.push(`|--------|-------|`);
+      lines.push(`| Requests | ${proxyStats.totalRequests} (${proxyStats.totalErrors} errors) |`);
+      lines.push(`| Cache hit rate | ${(proxyStats.cacheHitRate * 100).toFixed(1)}% |`);
+      if (proxyStats.cacheSummary) {
+        const cs = proxyStats.cacheSummary;
+        lines.push(`| Cache read tokens | ${fmtTokenCount(cs.cacheReadTokens)} |`);
+        lines.push(`| Cache create tokens | ${fmtTokenCount(cs.cacheCreationTokens)} |`);
+        lines.push(`| Uncached input tokens | ${fmtTokenCount(cs.uncachedInputTokens)} |`);
+      }
+      if (proxyStats.quotaBurn?.last5h) {
+        lines.push(`| Quota 5h utilization | ${(proxyStats.quotaBurn.last5h.utilization * 100).toFixed(1)}% |`);
+      }
+      if (proxyStats.quotaBurn?.last7d) {
+        lines.push(`| Quota 7d utilization | ${(proxyStats.quotaBurn.last7d.utilization * 100).toFixed(1)}% |`);
+      }
+      if (proxyStats.lastRequest) {
+        const lr = proxyStats.lastRequest;
+        lines.push(`| Last request | ${lr.model} ${lr.elapsedMs}ms (in: ${fmtTokenCount(lr.inputTokens)} out: ${fmtTokenCount(lr.outputTokens)}) |`);
+      }
+    } else {
+      lines.push("\nNo metrics available yet.");
+    }
+
+    outputResult(lines.join("\n") + "\n", false);
+    return;
+  }
+
   const reference = positionals[0] ?? "";
   if (reference) {
     const snapshot = options.wait

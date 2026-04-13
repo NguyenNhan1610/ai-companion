@@ -12,6 +12,7 @@
  */
 
 import { computeDeltas } from "./lib/statusline-cache.mjs";
+import { readProxyStats } from "./lib/proxy-stats.mjs";
 
 // ── ANSI helpers ──────────────────────────────────────────────────────
 const RESET = "\x1b[0m";
@@ -205,6 +206,45 @@ function renderLine2(session) {
   return parts.length > 0 ? parts.join(" │ ") : null;
 }
 
+// ── C5: Render Line 3 — proxy metrics (cache%, burn, reqs, uptime) ───
+function renderLine3(cwd) {
+  if (!cwd) return null;
+  try {
+    const stats = readProxyStats(cwd, 30_000);
+    if (!stats || !stats.totalRequests) return null;
+
+    const parts = [];
+    parts.push(`${MAGENTA}${BOLD}[Proxy]${RESET}`);
+
+    // Cache hit rate
+    const cacheRate = Math.round((stats.cacheHitRate || 0) * 100);
+    const cacheColor = cacheRate >= 95 ? GREEN : cacheRate >= 80 ? YELLOW : RED;
+    parts.push(`${DIM}cache: ${RESET}${cacheColor}${cacheRate}%${RESET}`);
+
+    // Quota burn (5h)
+    if (stats.quotaBurn?.last5h?.utilization != null) {
+      const q5h = Math.round(stats.quotaBurn.last5h.utilization * 100);
+      const qColor = q5h >= 80 ? RED : q5h >= 50 ? YELLOW : GREEN;
+      parts.push(`${DIM}quota: ${RESET}${qColor}${q5h}%${RESET}`);
+    }
+
+    // Request count
+    parts.push(`${DIM}reqs: ${stats.totalRequests}${RESET}`);
+
+    // Uptime
+    if (stats.upSince) {
+      const upMs = Date.now() - new Date(stats.upSince).getTime();
+      if (upMs > 0) {
+        parts.push(`${DIM}up: ${fmtDuration(upMs)}${RESET}`);
+      }
+    }
+
+    return parts.join(" │ ");
+  } catch {
+    return null;
+  }
+}
+
 // ── C4: Graceful degradation ──────────────────────────────────────────
 function renderFallback() {
   return `${DIM}[AI Companion] Initializing...${RESET}`;
@@ -237,6 +277,13 @@ async function main() {
     const line2 = renderLine2(session);
     if (line2) {
       process.stdout.write(line2 + "\n");
+    }
+
+    // Line 3: proxy metrics (only if proxy is active)
+    const cwd = stdin?.cwd || process.cwd();
+    const line3 = renderLine3(cwd);
+    if (line3) {
+      process.stdout.write(line3 + "\n");
     }
   } catch {
     process.stdout.write(renderFallback() + "\n");

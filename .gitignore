@@ -155,3 +155,6 @@ plugins/ai/.generated/
 # UI dashboard runtime files
 .claude/.ui-port
 .claude/.ui-pid
+
+# Proxy logs (contain API traffic, potentially sensitive)
+.claude/proxy-logs/

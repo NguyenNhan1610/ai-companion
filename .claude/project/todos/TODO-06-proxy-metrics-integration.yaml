@@ -1,0 +1,318 @@
+# TODO-06: Proxy Metrics Integration
+# Source: IMPL-05-proxy-metrics-integration.md
+# Goal: Port Python reverse proxy to Node.js, integrate proxy lifecycle into
+#        session hooks, expose metrics via CLI commands, enhance statusline
+# Critical path: A1 → A2 → C1 → C2 → D2 → D3 (10 days)
+
+metadata:
+  title: "Proxy Metrics Integration"
+  source: IMPL-05-proxy-metrics-integration
+  created: 2026-04-13
+  references:
+    impl: IMPL-05-proxy-metrics-integration
+    fdr: FDR-02-proxy-metrics-integration
+  tracks:
+    - core-proxy
+    - lifecycle
+    - stats
+    - cli-integration
+    - hardening
+
+tasks:
+  # ═══════════════════════════════════════════════
+  # Track A: Core Proxy (Foundational)
+  # ═══════════════════════════════════════════════
+
+  - id: T01
+    title: Proxy HTTP server core
+    status: done
+    priority: P0
+    track: core-proxy
+    description: |
+      Create proxy-server.mjs as Node.js port of ccproxycache/reverse-proxy/main.py.
+      node:http.createServer() bound to 127.0.0.1. Handle GET /health, OPTIONS (CORS),
+      POST /v1/* passthrough. Zero-overhead stream piping: req.pipe(upstreamReq) +
+      upstreamRes.pipe(clientRes). REST endpoints: GET /api/logs, /api/logs/dates,
+      /api/logs/stream (SSE fan-out, max 5 clients). Env vars: PROXY_PORT (3001),
+      ANTHROPIC_FORWARD_URL, PROXY_LOG_DIR.
+    references:
+      impl: IMPL-05 A1
+      fac: [FAC-01, FAC-08, FAC-10, FAC-13, FAC-15, FAC-16]
+    dependencies: []
+    blocks: [T02, T03, T04]
+    files:
+      - plugins/ai/scripts/proxy-server.mjs
+    effort: 3d
+
+  - id: T02
+    title: JSONL logging with security header stripping
+    status: done
+    priority: P0
+    track: core-proxy
+    description: |
+      Add daily-rotated JSONL logging to proxy-server.mjs. Log to
+      .claude/proxy-logs/YYYY-MM-DD.jsonl with permissions 0o600 (dir 0o700).
+      Strip x-api-key, authorization, cookie, proxy-authorization from logged headers.
+      Async fs.appendFile() after stream end -- never block relay path.
+      Truncate request body to 100KB with [truncated] marker.
+    references:
+      impl: IMPL-05 A2
+      fac: [FAC-02, FAC-03, FAC-17]
+    dependencies: [T01]
+    blocks: [T07, T08, T13, T14]
+    files:
+      - plugins/ai/scripts/proxy-server.mjs
+    effort: 1d
+
+  - id: T03
+    title: SSE stream relay and usage parsing
+    status: done
+    priority: P1
+    track: core-proxy
+    description: |
+      Implement SSE-aware streaming relay in proxy-server.mjs.
+      upstreamRes.pipe(clientRes) relays at wire speed; passive data listener
+      taps chunks for usage extraction. Parse SSE data lines for token usage
+      from message_start, message_delta, content_block_delta events.
+      Handle partial SSE lines with line buffer. try/catch per chunk parse.
+      600s upstream timeout.
+    references:
+      impl: IMPL-05 A3
+      fac: [FAC-13, FAC-15, FAC-16, FAC-18]
+    dependencies: [T01]
+    blocks: []
+    files:
+      - plugins/ai/scripts/proxy-server.mjs
+    effort: 2d
+
+  # ═══════════════════════════════════════════════
+  # Track B: Lifecycle Management
+  # ═══════════════════════════════════════════════
+
+  - id: T04
+    title: Proxy lifecycle module
+    status: done
+    priority: P0
+    track: lifecycle
+    description: |
+      Create proxy-lifecycle.mjs following broker-lifecycle.mjs pattern.
+      Exports: startProxy(cwd, options), stopProxy(cwd), isProxyRunning(cwd),
+      saveProxySession/loadProxySession/clearProxySession. Spawn proxy-server.mjs
+      as detached child, write pid/port files, poll /health every 50ms (max 2s).
+      Handle stale pid files.
+    references:
+      impl: IMPL-05 B1
+    dependencies: [T01]
+    blocks: [T05, T06, T07]
+    files:
+      - plugins/ai/scripts/lib/proxy-lifecycle.mjs
+    effort: 2d
+
+  - id: T05
+    title: Session hook integration
+    status: done
+    priority: P0
+    track: lifecycle
+    description: |
+      Modify session-lifecycle-hook.mjs to integrate proxy lifecycle.
+      handleSessionStart(): if proxy session exists and alive, inject
+      ANTHROPIC_BASE_URL=http://localhost:{port} via appendEnvVar().
+      Guard: skip if ANTHROPIC_BASE_URL already set to non-localhost URL.
+      handleSessionEnd(): call stopProxy(cwd).
+    references:
+      impl: IMPL-05 B2
+      fac: [FAC-05, FAC-07]
+    dependencies: [T04]
+    blocks: [T10]
+    files:
+      - plugins/ai/scripts/session-lifecycle-hook.mjs
+    effort: 1d
+
+  - id: T06
+    title: Port conflict auto-scan
+    status: done
+    priority: P1
+    track: lifecycle
+    description: |
+      Enhance startProxy() in proxy-lifecycle.mjs to handle port conflicts.
+      Try port 3001; if EADDRINUSE, scan 3002-3010. Use net.createServer().listen(port)
+      test. Report chosen port in session state.
+    references:
+      impl: IMPL-05 B3
+      fac: [FAC-11]
+    dependencies: [T04]
+    blocks: []
+    files:
+      - plugins/ai/scripts/lib/proxy-lifecycle.mjs
+    effort: 1d
+
+  - id: T07
+    title: Health monitoring and auto-restart
+    status: done
+    priority: P1
+    track: lifecycle
+    description: |
+      Add ensureProxyHealthy(cwd) to proxy-lifecycle.mjs. Check /health endpoint.
+      If down, attempt 1 restart via stopProxy() + startProxy(). If restart fails,
+      log warning and clear proxy session. Called from handleSessionStart().
+      Document CLAUDE_ENV_FILE append-only limitation.
+    references:
+      impl: IMPL-05 B4
+    dependencies: [T04]
+    blocks: [T10]
+    files:
+      - plugins/ai/scripts/lib/proxy-lifecycle.mjs
+    effort: 1d
+
+  # ═══════════════════════════════════════════════
+  # Track C: Stats and Metrics
+  # ═══════════════════════════════════════════════
+
+  - id: T08
+    title: Stats computation module
+    status: done
+    priority: P0
+    track: stats
+    description: |
+      Create proxy-stats.mjs with computeStats(logDir, options). Reads JSONL logs,
+      computes cache hit rate, quota burn rate (5h/7d windows), cache create/read
+      breakdown, per-session cost estimate. Exports in-memory accumulator class.
+      Atomic file output (tmp + rename) to resolveStateDir(cwd)/proxy-stats.json.
+    references:
+      impl: IMPL-05 C1
+    dependencies: [T02]
+    blocks: [T09]
+    files:
+      - plugins/ai/scripts/lib/proxy-stats.mjs
+    effort: 2d
+
+  - id: T09
+    title: Stats file writer integration in proxy server
+    status: done
+    priority: P0
+    track: stats
+    description: |
+      Integrate stats accumulator from proxy-stats.mjs into proxy-server.mjs.
+      Update in-memory stats after each request. Sync to proxy-stats.json on
+      5-second setInterval. Include all schema fields: proxyPort, upSince,
+      totalRequests, totalErrors, cacheHitRate, cacheSummary, quotaBurn,
+      lastRequest, updatedAt.
+    references:
+      impl: IMPL-05 C2
+    dependencies: [T08]
+    blocks: [T11]
+    files:
+      - plugins/ai/scripts/proxy-server.mjs
+    effort: 1d
+
+  # ═══════════════════════════════════════════════
+  # Track D: CLI Integration
+  # ═══════════════════════════════════════════════
+
+  - id: T10
+    title: Setup command --install-proxy
+    status: done
+    priority: P1
+    track: cli-integration
+    description: |
+      Add "install-proxy" to booleanOptions in handleSetup() of ai-companion.mjs.
+      Check if proxy already installed; call startProxy(cwd); report port, pid,
+      log dir. If active session: inject ANTHROPIC_BASE_URL via appendEnvVar().
+      Update setup.md argument-hint.
+    references:
+      impl: IMPL-05 D1
+      fac: [FAC-04]
+    dependencies: [T05, T07]
+    blocks: []
+    files:
+      - plugins/ai/scripts/ai-companion.mjs
+      - plugins/ai/commands/setup.md
+    effort: 1d
+
+  - id: T11
+    title: Status command --proxy
+    status: done
+    priority: P1
+    track: cli-integration
+    description: |
+      Add "proxy" to booleanOptions in status handler of ai-companion.mjs.
+      Load proxy session, check health, read proxy-stats.json. Render KPI table:
+      cache hit%, breakdown, quota burn, cost estimate, request count, uptime.
+      Update status.md argument-hint.
+    references:
+      impl: IMPL-05 D2
+      fac: [FAC-06]
+    dependencies: [T09]
+    blocks: [T12]
+    files:
+      - plugins/ai/scripts/ai-companion.mjs
+      - plugins/ai/commands/status.md
+    effort: 1d
+
+  - id: T12
+    title: Statusline proxy metrics line
+    status: done
+    priority: P2
+    track: cli-integration
+    description: |
+      Modify statusline-handler.mjs to render optional third line with proxy metrics.
+      Check for proxy-stats.json (< 30s old). Format:
+      [Proxy] cache: 73% | burn: $1.23/5h | reqs: 42 | up: 2h 15m
+      Stay within 200ms render budget. Sync read with try/catch fallback.
+    references:
+      impl: IMPL-05 D3
+      fac: [FAC-09]
+    dependencies: [T11]
+    blocks: []
+    files:
+      - plugins/ai/scripts/statusline-handler.mjs
+    effort: 1d
+
+  # ═══════════════════════════════════════════════
+  # Track E: Hardening
+  # ═══════════════════════════════════════════════
+
+  - id: T13
+    title: Log rotation and cleanup
+    status: done
+    priority: P2
+    track: hardening
+    description: |
+      Add startup log cleanup to proxy-server.mjs. Scan .claude/proxy-logs/
+      for files older than PROXY_LOG_MAX_DAYS (default 30). Delete old files
+      and log cleanup count.
+    references:
+      impl: IMPL-05 E1
+      fac: [FAC-12]
+    dependencies: [T02]
+    blocks: []
+    files:
+      - plugins/ai/scripts/proxy-server.mjs
+    effort: 1d
+
+  - id: T14
+    title: API key stripping verification
+    status: done
+    priority: P1
+    track: hardening
+    description: |
+      Add runtime assertion in JSONL write path: verify no log entry contains
+      x-api-key or authorization in request_headers before writing. Add startup
+      self-test with mock request. Document stripped header list in file header.
+      Defense-in-depth beyond A2 stripping.
+    references:
+      impl: IMPL-05 E2
+      fac: [FAC-03]
+    dependencies: [T02]
+    blocks: []
+    files:
+      - plugins/ai/scripts/proxy-server.mjs
+    effort: 1d
+
+# ═══════════════════════════════════════════════
+# Summary
+# ═══════════════════════════════════════════════
+# Total tasks: 14
+# Critical path: T01 → T02 → T08 → T09 → T11 → T12
+# Estimated calendar time: ~10 days (with parallelism)
+# Tracks: core-proxy (3), lifecycle (4), stats (2), cli-integration (3), hardening (2)

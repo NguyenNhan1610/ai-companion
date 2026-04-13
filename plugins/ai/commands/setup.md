@@ -1,6 +1,6 @@
 ---
 description: Check whether the AI backend CLI is ready and optionally init project, toggle review gate, install coding rules, or install Mermaid.js
-argument-hint: '[--init] [--init --ui] [--provider codex|copilot|claude] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid] [--install-statusline]'
+argument-hint: '[--init] [--init --ui] [--provider codex|copilot|claude] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid] [--install-statusline] [--install-proxy]'
 allowed-tools: Bash(node:*), Bash(npm:*), AskUserQuestion
 ---
 
@@ -36,6 +36,13 @@ If `--install-statusline` is provided:
 - Writes the `statusLine` config to `~/.claude/settings.json` pointing at the plugin's `statusline-handler.mjs`.
 - The handler reads native token metrics (input, output, cache creation, cache read) and session metrics (cost, duration, lines) from Claude Code's stdin contract.
 - User must restart Claude Code after installation.
+
+If `--install-proxy` is provided:
+- Starts a reverse proxy between Claude Code and api.anthropic.com for API telemetry.
+- Logs all requests/responses to `.claude/proxy-logs/` as daily JSONL files.
+- Sets `ANTHROPIC_BASE_URL` to route traffic through the proxy.
+- Use `/ai:status --proxy` to view live metrics (cache hit%, quota burn, cost).
+- The proxy is pure passthrough — it does NOT modify requests or responses.
 
 Output rules:
 - Present the final setup output to the user.
