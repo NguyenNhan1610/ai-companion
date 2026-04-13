@@ -150,8 +150,8 @@ function renderBar(percent, width = 10) {
   return `${color}${"█".repeat(filled)}${"░".repeat(empty)}${RESET}`;
 }
 
-// ── C1: Render Line 1 — model, progress bar, tokens, cost ────────────
-function renderLine1(stdin, tokens, contextPct, session) {
+// ── C1: Render Line 1 — model, progress bar, tokens (with deltas), cost
+function renderLine1(stdin, tokens, contextPct, session, deltas) {
   const model = stdin?.model?.display_name?.replace(/\s*\([^)]*\bcontext\b[^)]*\)/i, "").trim()
     || stdin?.model?.id || "Unknown";
 
@@ -161,11 +161,15 @@ function renderLine1(stdin, tokens, contextPct, session) {
   const color = contextColor(contextPct);
   parts.push(`${CYAN}${BOLD}[${model}]${RESET} ${renderBar(contextPct)} ${color}${contextPct}%${RESET}`);
 
-  // C2: Token breakdown at >=85%, compact otherwise
+  // Token display with inline per-request deltas: in: 136k (+2.1k) out: 12 (+8)
+  const inDelta = deltas.lastInputDelta ? ` ${YELLOW}(+${fmtTokens(deltas.lastInputDelta)})${RESET}${DIM}` : "";
+  const outDelta = deltas.lastOutputDelta ? ` ${YELLOW}(+${fmtTokens(deltas.lastOutputDelta)})${RESET}${DIM}` : "";
+
   if (contextPct >= 85) {
-    parts.push(`${DIM}in: ${fmtTokens(tokens.input)} cw: ${fmtTokens(tokens.cacheCreation)} cr: ${fmtTokens(tokens.cacheRead)}${RESET}`);
+    // C2: Per-bucket breakdown at high context
+    parts.push(`${DIM}in: ${fmtTokens(tokens.input)}${inDelta} cw: ${fmtTokens(tokens.cacheCreation)} cr: ${fmtTokens(tokens.cacheRead)}${RESET}`);
   } else {
-    parts.push(`${DIM}in: ${fmtTokens(totalInputTokens(tokens))} out: ${fmtTokens(tokens.output)}${RESET}`);
+    parts.push(`${DIM}in: ${fmtTokens(totalInputTokens(tokens))}${inDelta} out: ${fmtTokens(tokens.output)}${outDelta}${RESET}`);
   }
 
   // Cost
@@ -176,14 +180,9 @@ function renderLine1(stdin, tokens, contextPct, session) {
   return parts.join(" │ ");
 }
 
-// ── C3: Render Line 2 — speed, API ratio, lines changed ──────────────
-function renderLine2(deltas, session) {
+// ── C3: Render Line 2 — API ratio, duration, lines changed ───────────
+function renderLine2(session) {
   const parts = [];
-
-  // Output speed
-  if (deltas.outputSpeed !== null) {
-    parts.push(`${DIM}speed: ${deltas.outputSpeed.toFixed(1)} tok/s${RESET}`);
-  }
 
   // API duration ratio
   if (session.apiDurationMs !== null && session.durationMs !== null && session.durationMs > 0) {
@@ -230,12 +229,12 @@ async function main() {
       ts: Date.now(),
     });
 
-    // Line 1: model + context bar + tokens + cost
-    const line1 = renderLine1(stdin, tokens, contextPct, session);
+    // Line 1: model + context bar + tokens (with per-request deltas) + cost
+    const line1 = renderLine1(stdin, tokens, contextPct, session, deltas);
     process.stdout.write(line1 + "\n");
 
-    // Line 2: speed + api ratio + duration + lines (only if any data)
-    const line2 = renderLine2(deltas, session);
+    // Line 2: api ratio + duration + lines (only if any data)
+    const line2 = renderLine2(session);
     if (line2) {
       process.stdout.write(line2 + "\n");
     }

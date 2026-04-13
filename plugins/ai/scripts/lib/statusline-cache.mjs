@@ -1,37 +1,38 @@
 import fs from "node:fs";
 
 const CACHE_PATH = "/tmp/.claude-statusline-cache.json";
-const MAX_DELTA_MS = 2000;
 
 /**
  * Compute per-request deltas by diffing against the previous cached reading.
+ * Persists the last non-zero input/output deltas so they remain visible
+ * between API calls (when cumulative values don't change).
+ *
  * @param {{ inputTokens: number, outputTokens: number, ts: number }} current
- * @returns {{ outputSpeed: number|null, inputDelta: number, outputDelta: number }}
+ * @returns {{ lastInputDelta: number|null, lastOutputDelta: number|null }}
  */
 export function computeDeltas(current) {
   const prev = readCache();
-  const deltas = { outputSpeed: null, inputDelta: 0, outputDelta: 0 };
+  let lastInputDelta = prev?.lastInputDelta ?? null;
+  let lastOutputDelta = prev?.lastOutputDelta ?? null;
 
-  if (prev && current.ts - prev.ts > 0 && current.ts - prev.ts <= MAX_DELTA_MS) {
-    const dtSec = (current.ts - prev.ts) / 1000;
-    deltas.outputDelta = current.outputTokens - prev.outputTokens;
-    deltas.inputDelta = current.inputTokens - prev.inputTokens;
-    if (deltas.outputDelta > 0) {
-      deltas.outputSpeed = deltas.outputDelta / dtSec;
-    }
+  if (prev) {
+    const inputDiff = current.inputTokens - (prev.inputTokens ?? 0);
+    const outputDiff = current.outputTokens - (prev.outputTokens ?? 0);
+
+    // Only update stored delta when tokens actually changed (new API response)
+    if (inputDiff > 0) lastInputDelta = inputDiff;
+    if (outputDiff > 0) lastOutputDelta = outputDiff;
   }
 
-  writeCache(current);
-  return deltas;
+  writeCache({ ...current, lastInputDelta, lastOutputDelta });
+  return { lastInputDelta, lastOutputDelta };
 }
 
 function readCache() {
   try {
     const raw = fs.readFileSync(CACHE_PATH, "utf8");
     const parsed = JSON.parse(raw);
-    if (typeof parsed.outputTokens === "number" && typeof parsed.ts === "number") {
-      return parsed;
-    }
+    if (typeof parsed.ts === "number") return parsed;
     return null;
   } catch {
     return null;
@@ -44,6 +45,8 @@ function writeCache(data) {
       inputTokens: data.inputTokens,
       outputTokens: data.outputTokens,
       ts: data.ts,
+      lastInputDelta: data.lastInputDelta,
+      lastOutputDelta: data.lastOutputDelta,
     }), "utf8");
   } catch {
     // Non-fatal — treat next invocation as first.
