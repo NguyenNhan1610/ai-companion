@@ -294,7 +294,7 @@ PostToolUse/Edit fires
   |
   v
 cascade-logger.sh
-  | Appends to .claude/cascades/main.md:
+  | Appends to .project/cascades/main.md:
   | "- [14:23:07] EDIT `src/auth.ts` L45-67"
   |
   v
@@ -305,7 +305,7 @@ User: /ai:cascade --since 2h
   |
   v
 cascade agent
-  | 1. Read .claude/cascades/main.md
+  | 1. Read .project/cascades/main.md
   | 2. Read git diff + git log
   | 3. Group changes by user prompt segments
   | 4. Cross-reference with FDR/IMPL tasks
@@ -460,7 +460,7 @@ User invokes commands; hooks provide automatic validation and reminders.
 
 8. User implements the feature...
    -> [AUTO] PostToolUse/Edit|Write|Bash: cascade-logger.sh
-      Every file change logged to .claude/cascades/main.md
+      Every file change logged to .project/cascades/main.md
 
 9. User says "done"
    -> [AUTO] Stop: lint-on-stop.sh
@@ -824,7 +824,7 @@ On demand (loaded when invoked):
 Never in context:
   +-- Hook scripts (bash/node, executed externally)
   +-- ai-companion.mjs and lib/ scripts (executed via Bash tool)
-  +-- .claude/cascades/ logs (read on demand by agents)
+  +-- .project/cascades/ logs (read on demand by agents)
   +-- .claude/ai/ job state (managed by scripts)
 ```
 

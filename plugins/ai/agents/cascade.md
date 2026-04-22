@@ -16,7 +16,7 @@ You are a cascade recording agent. You analyze raw change logs and produce struc
 5. File: `.project/handoff-records/REC-{NN}-{slug}.md`
 
 ### Phase 1: READ CASCADE
-1. Read `.claude/cascades/{branch}.md` — the raw timestamped change log
+1. Read `.project/cascades/{branch}.md` — the raw timestamped change log
 2. Parse entries: timestamp, action, file path, line locations
 3. Parse session segments with signal tags:
    - `## [HH:MM:SS] [NEW]` — new request

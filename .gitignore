@@ -150,7 +150,7 @@ output/
 plugins/ai/.generated/
 
 # Cascade change logs
-.claude/cascades/
+.project/cascades/
 
 # UI dashboard runtime files
 .claude/.ui-port

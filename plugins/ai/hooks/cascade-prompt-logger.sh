@@ -48,9 +48,9 @@ safe_branch=$(echo "$branch" | sed 's/[^a-zA-Z0-9._-]/-/g')
 agent_type=$(echo "$input" | jq -r '.agent_type // .subagent_type // empty')
 if [ -n "$agent_type" ]; then
   safe_agent=$(echo "$agent_type" | sed 's/[^a-zA-Z0-9._-]/-/g')
-  cascade_dir="$git_root/.claude/cascades/$safe_agent"
+  cascade_dir="$git_root/.project/cascades/$safe_agent"
 else
-  cascade_dir="$git_root/.claude/cascades"
+  cascade_dir="$git_root/.project/cascades"
 fi
 cascade_file="$cascade_dir/$safe_branch.md"
 

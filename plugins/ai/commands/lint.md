@@ -10,7 +10,7 @@ Raw slash-command arguments:
 `$ARGUMENTS`
 
 Behavior:
-- Without args: lint all files from the current cascade (`.claude/cascades/{branch}.md`)
+- Without args: lint all files from the current cascade (`.project/cascades/{branch}.md`)
 - With `--all`: lint all Python and TypeScript files in the project
 - With `--fix`: auto-fix what's safe (`ruff check --fix`, `eslint --fix`)
 - With file paths: lint only those specific files

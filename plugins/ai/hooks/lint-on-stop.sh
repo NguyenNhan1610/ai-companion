@@ -24,7 +24,7 @@ branch=$(cd "$cwd" && git branch --show-current 2>/dev/null || echo "detached")
 [ -z "$branch" ] && branch="detached"
 safe_branch=$(echo "$branch" | sed 's/[^a-zA-Z0-9._-]/-/g')
 
-cascade_file="$cwd/.claude/cascades/$safe_branch.md"
+cascade_file="$cwd/.project/cascades/$safe_branch.md"
 
 # No cascade = nothing to check
 [ ! -f "$cascade_file" ] && { echo '{}'; exit 0; }

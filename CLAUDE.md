@@ -11,7 +11,7 @@
 - `.project/knowledge-entries/` — Reusable knowledge: patterns, lessons, decisions, antipatterns
 - `.project/todo-lists/` — Task tracking with DAG, priority, confidence, effort (`TODO-{NN}-{slug}.yaml`)
 - `.project/scripts/hypothesis/` — Hypothesis test scripts (`H{NN}_{slug}.py` + `_result.json`)
-- `.claude/cascades/` — Auto-generated change log (timestamps + file:line, gitignored)
+- `.project/cascades/` — Auto-generated change log (timestamps + file:line, gitignored)
 - `.claude/rules/` — On-demand coding rules by stack (install via `/ai:setup --install-rules`)
 
 ## Planning document frontmatter

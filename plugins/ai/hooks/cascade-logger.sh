@@ -1,5 +1,5 @@
 #!/bin/bash
-# PostToolUse hook: logs file changes to .claude/cascades/{branch}.md
+# PostToolUse hook: logs file changes to .project/cascades/{branch}.md
 # Format: - [HH:MM:SS] ACTION `filepath` L{start}-{end}
 
 set -euo pipefail
@@ -28,9 +28,9 @@ agent_type=$(echo "$input" | jq -r '.agent_type // .subagent_type // empty')
 if [ -n "$agent_type" ]; then
   # Sanitize agent type for directory name
   safe_agent=$(echo "$agent_type" | sed 's/[^a-zA-Z0-9._-]/-/g')
-  cascade_dir="$git_root/.claude/cascades/$safe_agent"
+  cascade_dir="$git_root/.project/cascades/$safe_agent"
 else
-  cascade_dir="$git_root/.claude/cascades"
+  cascade_dir="$git_root/.project/cascades"
 fi
 cascade_file="$cascade_dir/$safe_branch.md"
 
@@ -127,7 +127,7 @@ esac
 
 # Skip self-logging
 case "$file_path" in
-  */.claude/cascades/*) echo '{}'; exit 0 ;;
+  */.project/cascades/*) echo '{}'; exit 0 ;;
 esac
 
 # Make path relative to git root (not cwd) for consistent cascade entries

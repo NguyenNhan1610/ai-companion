@@ -11,7 +11,7 @@ Raw user request:
 $ARGUMENTS
 
 The cascade agent:
-1. Reads `.claude/cascades/{branch}.md` for the raw change log with timestamps
+1. Reads `.project/cascades/{branch}.md` for the raw change log with timestamps
 2. Reads `git diff` + `git log` for actual code changes
 3. Explores changed files to understand intent and trace to source documents
 4. Groups changes by user prompt segments

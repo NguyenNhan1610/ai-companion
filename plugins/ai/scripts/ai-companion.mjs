@@ -408,7 +408,7 @@ async function handleSetup(argv, backend) {
       ".project/scripts/hypothesis",
       ".project/guidelines",
       ".project/workflows",
-      ".claude/cascades"
+      ".project/cascades"
     ];
     const created = [];
     for (const dir of projectDirs) {
@@ -436,7 +436,7 @@ ${marker}
 - \`.project/validation-reports/\` — Pairwise validation reports (VAL-{NN}-{upstream}-to-{downstream}.md)
 - \`.project/knowledge-entries/\` — Reusable knowledge: patterns, lessons, decisions, antipatterns
 - \`.project/scripts/hypothesis/\` — Hypothesis test scripts (H{NN}_{slug}.py + _result.json)
-- \`.claude/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
+- \`.project/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
 - \`.claude/rules/\` — On-demand coding rules by stack (install via /ai:setup --install-rules)
 
 ## AI Companion Workflow

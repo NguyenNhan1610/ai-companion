@@ -50,7 +50,7 @@ Use this mode when the Stop / SubagentStop hook tells you to reconcile, or when 
 
 Steps:
 1. Read the current branch: `git branch --show-current` (fallback to `detached`).
-2. Read `.claude/cascades/<branch>.md` and extract the last session segment (entries after the most recent `## [` header).
+2. Read `.project/cascades/<branch>.md` and extract the last session segment (entries after the most recent `## [` header).
 3. From the segment, collect unique file paths that are NOT under `.claude/**` or `.claude-plugin/**` and NOT gitignored (`git check-ignore -q <path>`).
 4. `Glob` for `.project/todo-lists/TODO-*.yaml`. Read the matches.
 5. For each task, decide whether any of the collected files plausibly belongs to its scope. Use these signals, in order:
@@ -97,7 +97,7 @@ Rules for this mode:
 3. Write updated YAML
 
 ### `--sync` — Auto-Sync from Cascade
-1. Read `.claude/cascades/{branch}.md` for recent changes
+1. Read `.project/cascades/{branch}.md` for recent changes
 2. Read current TODO file
 3. Match cascade entries to task files (from task's `evidence` and `files` fields)
 4. Auto-update status: if all task files exist/modified → mark `complete`
