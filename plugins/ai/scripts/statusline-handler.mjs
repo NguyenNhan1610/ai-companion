@@ -12,7 +12,6 @@
  */
 
 import { computeDeltas } from "./lib/statusline-cache.mjs";
-import { readProxyStats } from "./lib/proxy-stats.mjs";
 
 // ── ANSI helpers ──────────────────────────────────────────────────────
 const RESET = "\x1b[0m";
@@ -206,163 +205,6 @@ function renderLine2(session) {
   return parts.length > 0 ? parts.join(" │ ") : null;
 }
 
-// ── Proxy helpers ────────────────────────────────────────────────────
-
-function quotaColor(pct) {
-  if (pct >= 80) return RED;
-  if (pct >= 50) return YELLOW;
-  return GREEN;
-}
-
-function cacheColor(pct) {
-  if (pct >= 95) return GREEN;
-  if (pct >= 80) return YELLOW;
-  return RED;
-}
-
-/**
- * Read proxy stats once for all proxy lines.
- * Returns null if proxy is inactive or stats are stale.
- */
-function loadProxyStatsOnce(cwd) {
-  if (!cwd) return null;
-  try {
-    return readProxyStats(cwd, 30_000);
-  } catch {
-    return null;
-  }
-}
-
-// ── C5: Render Line 3 — session overview (cache, quota, cost, reqs) ──
-function renderProxyLine3(stats) {
-  if (!stats || !stats.totalRequests) return null;
-
-  const parts = [];
-  parts.push(`${MAGENTA}${BOLD}[Proxy]${RESET}`);
-
-  // Cache hit rate
-  const cr = Math.round((stats.cacheHitRate || 0) * 100);
-  parts.push(`${DIM}cache: ${RESET}${cacheColor(cr)}${cr}%${RESET}`);
-
-  // Quota 5h
-  if (stats.quotaBurn?.last5h?.utilization != null) {
-    const q5 = Math.round(stats.quotaBurn.last5h.utilization * 100);
-    parts.push(`${DIM}5h: ${RESET}${quotaColor(q5)}${q5}%${RESET}`);
-  }
-
-  // Quota 7d
-  if (stats.quotaBurn?.last7d?.utilization != null) {
-    const q7 = Math.round(stats.quotaBurn.last7d.utilization * 100);
-    parts.push(`${DIM}7d: ${RESET}${quotaColor(q7)}${q7}%${RESET}`);
-  }
-
-  // Request count
-  parts.push(`${DIM}reqs: ${stats.totalRequests}${RESET}`);
-
-  // Uptime
-  if (stats.upSince) {
-    const upMs = Date.now() - new Date(stats.upSince).getTime();
-    if (upMs > 0) parts.push(`${DIM}up: ${fmtDuration(upMs)}${RESET}`);
-  }
-
-  return parts.join(" │ ");
-}
-
-// ── C6: Render Line 4 — input breakdown (system, msgs, tools, thinking)
-function renderProxyLine4(stats) {
-  const lr = stats?.lastRequest;
-  if (!lr?.inputSummary) return null;
-
-  const is = lr.inputSummary;
-  const parts = [];
-  parts.push(`${CYAN}${BOLD}[Input]${RESET}`);
-
-  // System prompt length
-  if (is.systemLength > 0) {
-    parts.push(`${DIM}sys: ${fmtTokens(is.systemLength)}${RESET}`);
-  }
-
-  // Messages count with role breakdown
-  if (is.messageCount > 0) {
-    const roleStr = Object.entries(is.roles || {})
-      .map(([r, c]) => `${r.slice(0, 3)}:${c}`)
-      .join(" ");
-    parts.push(`${DIM}msgs: ${is.messageCount} (${roleStr})${RESET}`);
-  }
-
-  // Tool definitions count
-  if (is.toolCount > 0) {
-    parts.push(`${DIM}tools: ${is.toolCount}${RESET}`);
-  }
-
-  // Thinking budget
-  if (is.thinkingBudget > 0) {
-    parts.push(`${DIM}think: ${fmtTokens(is.thinkingBudget)}${RESET}`);
-  }
-
-  // Images (only if > 0)
-  if (is.images > 0) {
-    parts.push(`${YELLOW}imgs: ${is.images}${RESET}`);
-  }
-
-  // Tool results in messages (only if > 0)
-  if (is.toolResults > 0) {
-    parts.push(`${DIM}tr: ${is.toolResults}${RESET}`);
-  }
-
-  return parts.length > 1 ? parts.join(" │ ") : null;
-}
-
-// ── C7: Render Line 5 — last request output (latency, tokens, tools) ─
-function renderProxyLine5(stats) {
-  const lr = stats?.lastRequest;
-  if (!lr) return null;
-
-  const parts = [];
-  parts.push(`${CYAN}${BOLD}[Last]${RESET}`);
-
-  // Latency
-  if (lr.elapsedMs > 0) {
-    const secs = (lr.elapsedMs / 1000).toFixed(1);
-    parts.push(`${DIM}${secs}s${RESET}`);
-  }
-
-  // Cache read tokens (input)
-  parts.push(`${DIM}in: ${RESET}${GREEN}${fmtTokens(lr.cacheReadTokens || 0)}${RESET}`);
-
-  // Cache creation — RED if > 0 (cache bust!)
-  const crTokens = lr.cacheCreationTokens || 0;
-  if (crTokens > 0) {
-    parts.push(`${RED}${BOLD}cr: ${fmtTokens(crTokens)}${RESET}`);
-  } else {
-    parts.push(`${DIM}cr: 0${RESET}`);
-  }
-
-  // Thinking output length
-  const od = lr.outputDetail;
-  if (od?.thinkingLength > 0) {
-    parts.push(`${DIM}think: ${fmtTokens(od.thinkingLength)}${RESET}`);
-  }
-
-  // Output tokens
-  parts.push(`${DIM}out: ${fmtTokens(lr.outputTokens || 0)}${RESET}`);
-
-  // Tool calls from last request output
-  if (od?.toolCalls?.length > 0) {
-    // Count occurrences of each tool
-    const counts = {};
-    for (const name of od.toolCalls) counts[name] = (counts[name] || 0) + 1;
-    const toolStr = Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([n, c]) => c > 1 ? `${n}(${c})` : n)
-      .join(" ");
-    parts.push(`${YELLOW}${toolStr}${RESET}`);
-  }
-
-  return parts.join(" │ ");
-}
-
 // ── C4: Graceful degradation ──────────────────────────────────────────
 function renderFallback() {
   return `${DIM}[AI Companion] Initializing...${RESET}`;
@@ -395,20 +237,6 @@ async function main() {
     const line2 = renderLine2(session);
     if (line2) {
       process.stdout.write(line2 + "\n");
-    }
-
-    // Lines 3-5: proxy metrics (only if proxy is active)
-    const cwd = stdin?.cwd || process.cwd();
-    const proxyStats = loadProxyStatsOnce(cwd);
-    if (proxyStats && proxyStats.totalRequests) {
-      const line3 = renderProxyLine3(proxyStats);
-      if (line3) process.stdout.write(line3 + "\n");
-
-      const line4 = renderProxyLine4(proxyStats);
-      if (line4) process.stdout.write(line4 + "\n");
-
-      const line5 = renderProxyLine5(proxyStats);
-      if (line5) process.stdout.write(line5 + "\n");
     }
   } catch {
     process.stdout.write(renderFallback() + "\n");

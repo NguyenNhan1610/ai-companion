@@ -1,6 +1,6 @@
 ---
 description: Show active and recent AI jobs for this repository, including review-gate status
-argument-hint: '[job-id] [--wait] [--timeout-ms <ms>] [--all] [--proxy]'
+argument-hint: '[job-id] [--wait] [--timeout-ms <ms>] [--all]'
 allowed-tools: Bash(node:*)
 ---
 
@@ -14,7 +14,3 @@ If the user did not pass a job ID:
 If the user did pass a job ID:
 - Present the full command output to the user.
 - Do not summarize or condense it.
-
-If the user passed `--proxy`:
-- Show proxy metrics: status, port, cache hit%, quota burn, request count, uptime.
-- Present as a compact Markdown table.

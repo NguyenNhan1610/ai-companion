@@ -14,11 +14,6 @@ import {
   sendBrokerShutdown,
   teardownBrokerSession
 } from "./lib/broker-lifecycle.mjs";
-import {
-  ensureProxyHealthy,
-  loadProxySession,
-  stopProxy,
-} from "./lib/proxy-lifecycle.mjs";
 import { loadState, resolveStateFile, saveState } from "./lib/state.mjs";
 import { resolveWorkspaceRoot } from "./lib/workspace.mjs";
 
@@ -101,22 +96,6 @@ function cleanupUiDashboard(cwd) {
 async function handleSessionStart(input) {
   appendEnvVar(SESSION_ID_ENV, input.session_id);
   appendEnvVar(PLUGIN_DATA_ENV, process.env[PLUGIN_DATA_ENV]);
-
-  // Proxy auto-start: if a proxy session exists, ensure it's healthy
-  // and inject ANTHROPIC_BASE_URL so Claude Code routes through it.
-  const cwd = input.cwd || process.cwd();
-  try {
-    const proxySession = await ensureProxyHealthy(cwd);
-    if (proxySession && proxySession.port) {
-      // Guard: skip if ANTHROPIC_BASE_URL already set to a non-localhost URL
-      const existingBaseUrl = process.env.ANTHROPIC_BASE_URL || "";
-      if (!existingBaseUrl || existingBaseUrl.includes("localhost") || existingBaseUrl.includes("127.0.0.1")) {
-        appendEnvVar("ANTHROPIC_BASE_URL", `http://127.0.0.1:${proxySession.port}`);
-      }
-    }
-  } catch {
-    // Proxy failures must not break session startup
-  }
 }
 
 async function handleSessionEnd(input) {
@@ -139,9 +118,6 @@ async function handleSessionEnd(input) {
   if (brokerEndpoint) {
     await sendBrokerShutdown(brokerEndpoint);
   }
-
-  // Cleanup proxy server
-  try { stopProxy(cwd); } catch { /* ignore */ }
 
   // Cleanup UI dashboard server
   cleanupUiDashboard(cwd);
