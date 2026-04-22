@@ -175,7 +175,7 @@ Agent (fdr.md)
   | Phase 3: Stress-test
   | Phase 4: Assess risks
   | Phase 5: Plan
-  | Phase 6: Write -> .claude/project/fdr/FDR-01-session-caching.md
+  | Phase 6: Write -> .claude/project/feature-development-records/FDR-01-session-caching.md
   |
   v
 SubagentStop fires in main context
@@ -232,7 +232,7 @@ SubagentStop hook fires (main context)
   v
 auto-validate-on-stage.sh
   | 1. Read cascade log for last segment
-  | 2. Find Write entries to .claude/project/fdr/FDR-*.md
+  | 2. Find Write entries to .claude/project/feature-development-records/FDR-*.md
   | 3. Match found
   |
   v
@@ -309,7 +309,7 @@ cascade agent
   | 2. Read git diff + git log
   | 3. Group changes by user prompt segments
   | 4. Cross-reference with FDR/IMPL tasks
-  | 5. Write .claude/project/cascades/REC-01-auth-refactor.md
+  | 5. Write .claude/project/handoff-records/REC-01-auth-refactor.md
 ```
 
 ### Pattern 6: Knowledge Injection
@@ -321,7 +321,7 @@ User: /ai:feature-development-record Add rate limiting
   |
   v
 FDR agent Phase 0.5: CONSULT KNOWLEDGE BASE
-  | 1. Read .claude/project/knowledge/index.yaml
+  | 1. Read .claude/project/knowledge-entries/index.yaml
   | 2. Match "rate limiting" against trigger_patterns
   | 3. Found: KN-03-rate-limiter-token-bucket.md
   |      trigger_patterns: [rate limit, throttl, token bucket]
@@ -606,8 +606,8 @@ file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 # Fast exit: only care about Write to planning docs
 [ "$tool_name" != "Write" ] && { echo '{}'; exit 0; }
 case "$file_path" in
-  */.claude/project/fdr/FDR-*.md) ;;
-  */.claude/project/implementation_plans/IMPL-*.md) ;;
+  */.claude/project/feature-development-records/FDR-*.md) ;;
+  */.claude/project/implementation-plans/IMPL-*.md) ;;
   *) echo '{}'; exit 0 ;;
 esac
 
@@ -758,7 +758,7 @@ Every planning agent outputs a `next_actions` JSON block with the exact commands
     },
     {
       "action": "Create implementation plan",
-      "command": "/ai:implement --from .claude/project/fdr/FDR-03-session-caching.md"
+      "command": "/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md"
     }
   ]
 }

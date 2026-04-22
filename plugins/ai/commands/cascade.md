@@ -16,7 +16,7 @@ The cascade agent:
 3. Explores changed files to understand intent and trace to source documents
 4. Groups changes by user prompt segments
 5. Checks traceability to FDR/ADR/IMPL documents in `.claude/project/`
-6. Writes structured record to `.claude/project/cascades/REC-{NN}-{slug}.md`
+6. Writes structured record to `.claude/project/handoff-records/REC-{NN}-{slug}.md`
 
 Execution mode:
 - Default to foreground.

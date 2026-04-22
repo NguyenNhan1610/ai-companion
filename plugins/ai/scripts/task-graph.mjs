@@ -51,9 +51,6 @@ function findTodoPath(repoRoot, opts) {
   if (opts.path) return path.resolve(repoRoot, opts.path);
   const dir = path.resolve(repoRoot, TYPE_TO_DIR["todo-list"]);
   if (!fs.existsSync(dir)) {
-    // Fallback to legacy path while PR1 is the only thing merged
-    const legacy = path.resolve(repoRoot, ".claude/project/todos");
-    if (fs.existsSync(legacy)) return pickTodo(legacy, opts.id);
     throw new Error(`no todo-lists directory found at ${dir}`);
   }
   return pickTodo(dir, opts.id);

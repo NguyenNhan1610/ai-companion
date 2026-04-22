@@ -1,6 +1,6 @@
 #!/bin/bash
 # Stop / SubagentStop hook: reminds the assistant to reconcile its work
-# against .claude/project/todos/ whenever the last turn touched source
+# against .claude/project/todo-lists/ whenever the last turn touched source
 # files outside .claude/** and .claude-plugin/** and not covered by
 # .gitignore.
 #
@@ -70,7 +70,7 @@ while IFS= read -r line; do
   esac
 
   # Hard exclude: plugin meta directories. Even if the user edits
-  # .claude/project/fdr/FDR-01.md, that's not "source code" — it's
+  # .claude/project/feature-development-records/FDR-01.md, that's not "source code" — it's
   # AI Companion bookkeeping. Same for .claude-plugin/.
   case "$filepath" in
     .claude/*|.claude-plugin/*) continue ;;
@@ -121,7 +121,7 @@ if [ "$extra" -gt 0 ]; then
   file_list="${file_list}- ... and ${extra} more"
 fi
 
-reminder="Before stopping, reconcile your work against \`.claude/project/todos/\`.
+reminder="Before stopping, reconcile your work against \`.claude/project/todo-lists/\`.
 
 Your last turn modified ${total} tracked source file(s):
 ${file_list}

@@ -24,7 +24,7 @@ $ARGUMENTS
 4. **Collect test evidence**: grep tests that exercise the functions referenced.
 5. **Cross-reference**: check that every upstream item is traced through to code and tests. Flag gaps with severity — high (blocks ship), medium (should fix), low (nice to have).
 6. **Optional `--verify`**: produce a ship/no-ship verdict based on highs + medium count.
-7. **Write report** to `.claude/project/traces/TRACE-{NN}-{slug}.md`.
+7. **Write report** to `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md`.
 
 ## Rules
 

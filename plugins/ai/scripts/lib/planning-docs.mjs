@@ -466,3 +466,44 @@ export function syncBidirectional(repoRoot, newDocPath) {
   }
   return patched;
 }
+
+// ── CLI entry point ────────────────────────────────────────────────────
+// Lets agents shell out without a separate wrapper script:
+//   node planning-docs.mjs validate <path>
+//   node planning-docs.mjs sync <path>
+
+import { fileURLToPath as _fu } from "node:url";
+if (import.meta.url === `file://${process.argv[1]}` ||
+    _fu(import.meta.url) === process.argv[1]) {
+  const [, , sub, ...rest] = process.argv;
+  const cmd = sub || "help";
+  const arg = rest[0];
+  try {
+    if (cmd === "validate" && arg) {
+      const abs = path.resolve(arg);
+      const repoRoot = process.env.PWD || process.cwd();
+      const doc = readDoc(abs);
+      const v = validateDoc(doc, repoRoot);
+      if (v.ok) process.stdout.write("OK\n");
+      else {
+        for (const e of v.errors) process.stderr.write(`error: ${e}\n`);
+        process.exit(1);
+      }
+      for (const w of v.warnings) process.stderr.write(`warn: ${w}\n`);
+    } else if (cmd === "sync" && arg) {
+      const repoRoot = process.env.PWD || process.cwd();
+      const patched = syncBidirectional(repoRoot, arg);
+      if (patched.length === 0) process.stdout.write("no upstream patches needed\n");
+      else {
+        process.stdout.write(`patched ${patched.length} upstream:\n`);
+        for (const p of patched) process.stdout.write(`  ${p}\n`);
+      }
+    } else {
+      process.stderr.write("usage: node planning-docs.mjs <validate|sync> <path>\n");
+      process.exit(2);
+    }
+  } catch (e) {
+    process.stderr.write(`${e.message}\n`);
+    process.exit(1);
+  }
+}

@@ -1,21 +1,39 @@
-# REC-{NN}: {Feature/Change Title}
+---
+id: HANDOFF-{NN}
+type: handoff-record
+slug: {kebab-slug}
+title: {Feature/Change Title}
+status: active                                  # draft | active | superseded | deprecated
+upstream:                                       # planning docs that cover the work being recorded; may be empty for ad-hoc work
+  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
+  - .claude/project/implementation-plans/IMPL-{NN}-{slug}.md
+downstream: []
+supersedes: []
+superseded_by: null
+branch: {branch name}
+session_segments: {count}
+files_changed: {total}
+files_created: {N}
+files_edited: {N}
+files_removed: {N}
+satisfaction_accepted: {N}
+satisfaction_total_prompts: {N}
+incomplete_requests: {count}
+created: {YYYY-MM-DD}
+updated: {YYYY-MM-DD}
+---
 
-**Date:** {YYYY-MM-DD}
-**Branch:** {branch name}
-**Session segments:** {count}
-**Files changed:** {total} ({N} created, {N} edited, {N} removed)
-**Satisfaction rate:** {accepted}/{total prompts} ({%})
-**Incomplete requests:** {count}
+# HANDOFF-{NN}: {Feature/Change Title}
 
 ---
 
 ## Traceability
 
-| Document | Link | Status |
+| Document | Path | Status |
 |----------|------|--------|
-| ADR | [{ADR-XX-title}](../adr/ADR-XX-slug.md) | {Accepted/Proposed} |
-| FDR | [{FDR-XX-title}](../fdr/FDR-XX-slug.md) | {In Progress/Completed} |
-| IMPL | [{IMPL-XX-title}](../implementation_plans/IMPL-XX-slug.md) | {In Progress/Completed} |
+| ADR | .claude/project/architecture-decision-records/ADR-{NN}-{slug}.md | {draft/active/superseded} |
+| FDR | .claude/project/feature-development-records/FDR-{NN}-{slug}.md | {draft/active/superseded} |
+| IMPL | .claude/project/implementation-plans/IMPL-{NN}-{slug}.md | {draft/active/superseded} |
 
 *If no planning documents found, note: "No planning documents found for this implementation."*
 

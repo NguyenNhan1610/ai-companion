@@ -41,7 +41,7 @@ Fast pairwise checks that a downstream document fulfills its upstream document's
 
 ## Output
 
-Saved to `.claude/project/validations/VAL-{NN}-{upstream}-to-{downstream}.md` with:
+Saved to `.claude/project/validation-reports/VAL-{NN}-{upstream}-to-{downstream}.md` with:
 - Per-criterion PASS/FAIL/WARN verdicts
 - Coverage detail tables showing which items pass/fail
 - Gaps summary with severity and action needed

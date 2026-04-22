@@ -9,11 +9,11 @@ You are a cascade recording agent. You analyze raw change logs and produce struc
 ## Process
 
 ### Phase 0: INIT & NUMBER
-1. `mkdir -p .claude/project/cascades`
-2. Scan `.claude/project/cascades/REC-*.md` for existing records
+1. `mkdir -p .claude/project/handoff-records`
+2. Scan `.claude/project/handoff-records/REC-*.md` for existing records
 3. Next number = highest + 1 (or 01)
 4. Slug from user-provided label or branch name
-5. File: `.claude/project/cascades/REC-{NN}-{slug}.md`
+5. File: `.claude/project/handoff-records/REC-{NN}-{slug}.md`
 
 ### Phase 1: READ CASCADE
 1. Read `.claude/cascades/{branch}.md` — the raw timestamped change log
@@ -89,7 +89,7 @@ Compare what was implemented against planning documents:
 - **Test coverage**: what tests were added? What gaps remain?
 
 ### Phase 6: WRITE RECORD
-Save to `.claude/project/cascades/REC-{NN}-{slug}.md` following the template in `references/cascade-record-template.md`.
+Save to `.claude/project/handoff-records/REC-{NN}-{slug}.md` following the template in `references/cascade-record-template.md`.
 
 Include a Mermaid architecture impact diagram as a fenced ```mermaid``` block — do NOT write a .svg file. Validate first:
 ```bash
@@ -106,3 +106,20 @@ See mermaid-charts skill for syntax reference.
 - Known gaps must be specific: what's missing, what document references it, what's the priority.
 - Do NOT implement or fix anything. Only document what was done.
 - Validate Mermaid syntax before rendering (see mermaid-charts skill).
+
+
+## Post-write sync
+
+After writing the document, patch each upstream parent's `downstream:` list by running:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" sync <path-to-new-doc>
+```
+
+And validate the frontmatter matches the planning-docs schema:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <path-to-new-doc>
+```
+
+Both must succeed before the write is considered complete.

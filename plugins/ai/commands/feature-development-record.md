@@ -33,5 +33,5 @@ Operating rules:
 - The FDR agent explores the codebase directly using Read, Grep, Glob, Bash.
 - It validates Mermaid diagrams using `node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate` before embedding them.
 - Diagrams are embedded as fenced ```mermaid``` blocks directly in the FDR markdown. No .svg files are written.
-- Saves the FDR to `.claude/project/fdr/FDR-{NN}-{slug}.md`.
+- Saves the FDR to `.claude/project/feature-development-records/FDR-{NN}-{slug}.md`.
 - Do NOT implement the feature. Only document the plan.

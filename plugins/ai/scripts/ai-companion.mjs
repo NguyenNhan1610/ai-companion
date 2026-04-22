@@ -393,17 +393,17 @@ async function handleSetup(argv, backend) {
   // Handle --init
   if (options.init) {
     const projectDirs = [
-      ".claude/project/adr",
-      ".claude/project/fdr",
-      ".claude/project/implementation_plans",
-      ".claude/project/cascades",
+      ".claude/project/architecture-decision-records",
+      ".claude/project/feature-development-records",
+      ".claude/project/implementation-plans",
+      ".claude/project/handoff-records",
       ".claude/project/scripts/hypothesis",
-      ".claude/project/knowledge/patterns",
-      ".claude/project/knowledge/lessons",
-      ".claude/project/knowledge/decisions",
-      ".claude/project/knowledge/antipatterns",
-      ".claude/project/traces",
-      ".claude/project/todos",
+      ".claude/project/knowledge-entries/patterns",
+      ".claude/project/knowledge-entries/lessons",
+      ".claude/project/knowledge-entries/decisions",
+      ".claude/project/knowledge-entries/antipatterns",
+      ".claude/project/traceability-reports",
+      ".claude/project/todo-lists",
       ".claude/project/guidelines",
       ".claude/project/workflows",
       ".claude/cascades"
@@ -424,13 +424,13 @@ async function handleSetup(argv, backend) {
     const claudeSection = `
 ${marker}
 
-- \`.claude/project/adr/\` — Architecture Decision Records (ADR-XX-{slug}.md)
-- \`.claude/project/fdr/\` — Feature Development Records (FDR-XX-{slug}.md)
-- \`.claude/project/implementation_plans/\` — DAG task plans (IMPL-XX-{slug}.md)
-- \`.claude/project/cascades/\` — Implementation records with traceability (REC-XX-{slug}.md)
-- \`.claude/project/traces/\` — Traceability reports with coverage verification (TRACE-XX-{slug}.md)
-- \`.claude/project/knowledge/\` — Reusable knowledge: patterns, lessons, decisions, antipatterns
-- \`.claude/project/todos/\` — Task tracking with status + tickets (TODO-XX-{slug}.yaml)
+- \`.claude/project/architecture-decision-records/\` — Architecture Decision Records (ADR-XX-{slug}.md)
+- \`.claude/project/feature-development-records/\` — Feature Development Records (FDR-XX-{slug}.md)
+- \`.claude/project/implementation-plans/\` — DAG task plans (IMPL-XX-{slug}.md)
+- \`.claude/project/handoff-records/\` — Implementation records with traceability (REC-XX-{slug}.md)
+- \`.claude/project/traceability-reports/\` — Traceability reports with coverage verification (TRACE-XX-{slug}.md)
+- \`.claude/project/knowledge-entries/\` — Reusable knowledge: patterns, lessons, decisions, antipatterns
+- \`.claude/project/todo-lists/\` — Task tracking with status + tickets (TODO-XX-{slug}.yaml)
 - \`.claude/project/scripts/hypothesis/\` — Hypothesis test scripts (H{NN}_{slug}.py + _result.json)
 - \`.claude/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
 - \`.claude/rules/\` — On-demand coding rules by stack (install via /ai:setup --install-rules)

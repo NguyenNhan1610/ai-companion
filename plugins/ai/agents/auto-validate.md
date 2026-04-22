@@ -14,10 +14,10 @@ For each document path, determine its type and extract the upstream reference:
 
 | Document pattern | Type | Header field for upstream |
 |---|---|---|
-| `.claude/project/fdr/FDR-*.md` | FDR | `Source ADR:` |
-| `.claude/project/test_plans/TP-*.md` | TP | `Source FDR:` |
-| `.claude/project/implementation_plans/IMPL-*.md` | IMPL | `Source:` (FDR path or ID) |
-| `.claude/project/todos/TODO-*.yaml` | TODO | `source_impl:` (YAML field) |
+| `.claude/project/feature-development-records/FDR-*.md` | FDR | `Source ADR:` |
+| `.claude/project/test-plans/TP-*.md` | TP | `Source FDR:` |
+| `.claude/project/implementation-plans/IMPL-*.md` | IMPL | `Source:` (FDR path or ID) |
+| `.claude/project/todo-lists/TODO-*.yaml` | TODO | `source_impl:` (YAML field) |
 
 1. Read the first ~30 lines of the document to find the header field.
 2. Extract the upstream document ID (e.g., `ADR-02`, `FDR-03`, `IMPL-01`).
@@ -26,13 +26,13 @@ For each document path, determine its type and extract the upstream reference:
 ### Phase 2: RESOLVE
 
 1. Resolve the upstream document path by globbing:
-   - ADR: `.claude/project/adr/ADR-{NN}*.md`
-   - FDR: `.claude/project/fdr/FDR-{NN}*.md`
-   - TP: `.claude/project/test_plans/TP-{NN}*.md`
-   - IMPL: `.claude/project/implementation_plans/IMPL-{NN}*.md`
+   - ADR: `.claude/project/architecture-decision-records/ADR-{NN}*.md`
+   - FDR: `.claude/project/feature-development-records/FDR-{NN}*.md`
+   - TP: `.claude/project/test-plans/TP-{NN}*.md`
+   - IMPL: `.claude/project/implementation-plans/IMPL-{NN}*.md`
 2. If upstream file not found → **skip** with a note: "Upstream {ID} not found, skipping validation."
 3. Check if a VAL report already exists for this pair:
-   - Glob `.claude/project/validations/VAL-*-{upstream_id}-to-{downstream_id}.md`
+   - Glob `.claude/project/validation-reports/VAL-*-{upstream_id}-to-{downstream_id}.md`
    - If exists → **skip** with a note: "Already validated, see {VAL path}."
 4. For IMPL documents: also check if a TP exists for the same feature. If so, queue a second validation pair (TP→IMPL).
 

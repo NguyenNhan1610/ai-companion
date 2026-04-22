@@ -11,8 +11,8 @@ Generate structured test plans from FDR documents with full traceability to acce
 ## Command
 
 ```bash
-/ai:test-plan --from .claude/project/fdr/FDR-03-session-caching.md
-/ai:test-plan --from .claude/project/fdr/FDR-03-session-caching.md --adr .claude/project/adr/ADR-05-redis.md
+/ai:test-plan --from .claude/project/feature-development-records/FDR-03-session-caching.md
+/ai:test-plan --from .claude/project/feature-development-records/FDR-03-session-caching.md --adr .claude/project/architecture-decision-records/ADR-05-redis.md
 ```
 
 ## What You Get
@@ -47,7 +47,7 @@ ADR (AAC) ─┐
 
 ## Output
 
-Saved to `.claude/project/test_plans/TP-{NN}-{slug}.md` with traceability matrices, coverage summary, and gap analysis.
+Saved to `.claude/project/test-plans/TP-{NN}-{slug}.md` with traceability matrices, coverage summary, and gap analysis.
 
 ## Template Reference
 

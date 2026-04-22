@@ -49,16 +49,16 @@ while IFS= read -r line; do
   [ -z "$filepath" ] && continue
 
   case "$filepath" in
-    .claude/project/fdr/FDR-*.md) ;;
-    .claude/project/test_plans/TP-*.md) ;;
-    .claude/project/implementation_plans/IMPL-*.md) ;;
-    .claude/project/todos/TODO-*.yaml) ;;
+    .claude/project/feature-development-records/FDR-*.md) ;;
+    .claude/project/test-plans/TP-*.md) ;;
+    .claude/project/implementation-plans/IMPL-*.md) ;;
+    .claude/project/todo-lists/TODO-*.yaml) ;;
     *) continue ;;
   esac
 
   case "$filepath" in
-    .claude/project/adr/*) continue ;;
-    .claude/project/validations/*) continue ;;
+    .claude/project/architecture-decision-records/*) continue ;;
+    .claude/project/validation-reports/*) continue ;;
   esac
 
   case "$line" in

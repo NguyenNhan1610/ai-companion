@@ -1,12 +1,21 @@
-# ADR-{NN}: {Decision Title}
+---
+id: ADR-{NN}
+type: architecture-decision-record
+slug: {kebab-slug}
+title: {Decision Title}
+status: draft                                   # draft | active | superseded | deprecated
+scope: {module|system|api|data|infra}
+upstream: []                                    # ADR may have empty upstream
+downstream: []                                  # patched by generators of downstream FDRs/IMPLs
+supersedes: []                                  # list of superseded ADR paths, e.g. [.claude/project/architecture-decision-records/ADR-01-legacy.md]
+superseded_by: null
+technical_story: {link or null}
+decision_makers: [{team/role}]
+created: {YYYY-MM-DD}
+updated: {YYYY-MM-DD}
+---
 
-**Date:** {YYYY-MM-DD}
-**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-{NN}
-**Scope:** {module|system|api|data|infra}
-**Decision Makers:** {team/role}
-**Technical Story:** {link to issue/ticket if applicable}
-**Supersedes:** {ADR-XX or "—"}
-**Related FDRs:** {FDR-XX, FDR-YY, ... or "—"}
+# ADR-{NN}: {Decision Title}
 
 ---
 

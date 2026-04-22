@@ -1,13 +1,23 @@
-# FDR-{NN}: {Feature Title}
+---
+id: FDR-{NN}
+type: feature-development-record
+slug: {kebab-slug}
+title: {Feature Title}
+status: draft                                   # draft | active | superseded | deprecated
+scope: [{backend|frontend|fullstack|api|data}]
+upstream:                                       # full relative paths; at least one required
+  - .claude/project/architecture-decision-records/ADR-{NN}-{slug}.md
+downstream: []                                  # patched by TP/IMPL generators
+supersedes: []
+superseded_by: null
+author: {name/role}
+ticket: {link or null}
+inherits_aac: []                                # AAC IDs from source ADR, e.g. [AAC-01, AAC-03]
+created: {YYYY-MM-DD}
+updated: {YYYY-MM-DD}
+---
 
-**Date:** {YYYY-MM-DD}
-**Status:** Proposed | In Progress | Completed | Abandoned
-**Scope:** {backend|frontend|fullstack|api|data}
-**Author:** {name/role}
-**Related ADRs:** {ADR-XX if applicable}
-**Source ADR:** {ADR-XX — the ADR this feature implements, or "—" if standalone}
-**Inherits AAC:** {AAC-1, AAC-3 — AAC IDs from source ADR, or "—" if no source ADR}
-**Ticket:** {link to issue/ticket if applicable}
+# FDR-{NN}: {Feature Title}
 
 ---
 

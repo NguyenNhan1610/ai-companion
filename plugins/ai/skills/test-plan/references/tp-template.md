@@ -1,14 +1,24 @@
-# TP-{NN}: {Feature Title} Test Plan
+---
+id: TP-{NN}
+type: test-plan
+slug: {kebab-slug}
+title: {Feature Title} Test Plan
+status: draft                                   # draft | active | superseded | deprecated
+upstream:
+  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
+downstream: []                                  # patched by IMPL generator
+supersedes: []
+superseded_by: null
+framework: {Vitest | Jest | Pytest | other}
+inherits_aac: []                                # e.g. [AAC-01, AAC-02]
+inherits_fac: []                                # e.g. [FAC-01, FAC-02, FAC-03]
+baseline: {N existing tests across M files}
+target: {~N+X tests across ~M+Y files}
+created: {YYYY-MM-DD}
+updated: {YYYY-MM-DD}
+---
 
-**Date:** {YYYY-MM-DD}
-**Status:** Draft | Active | Completed
-**Source FDR:** {FDR-XX-slug.md}
-**Source ADR:** {ADR-XX-slug.md | "—"}
-**Inherits AAC:** {AAC-1, AAC-2 | "—"}
-**Inherits FAC:** {FAC-1, FAC-2, FAC-3}
-**Framework:** {Vitest / Jest / Pytest / etc.}
-**Baseline:** {N existing tests across M files}
-**Target:** {~N+X tests across ~M+Y files}
+# TP-{NN}: {Feature Title} Test Plan
 
 ---
 

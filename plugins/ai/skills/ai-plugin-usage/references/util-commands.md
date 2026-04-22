@@ -19,7 +19,7 @@ Inline content — no file needed. Only validation is supported; rendering to SV
 /ai:knowledge list                          # List all entries
 ```
 
-Types: patterns, lessons, decisions, antipatterns. Auto-suggested when starting FDR/ADR/IMPL/debug. Saved to `.claude/project/knowledge/`.
+Types: patterns, lessons, decisions, antipatterns. Auto-suggested when starting FDR/ADR/IMPL/debug. Saved to `.claude/project/knowledge-entries/`.
 
 ## `/ai:cascade` — Implementation Record
 
@@ -29,7 +29,7 @@ Types: patterns, lessons, decisions, antipatterns. Auto-suggested when starting 
 /ai:cascade --since 2h                     # Last 2 hours only
 ```
 
-Outputs: Traceability table, task completion, edge case/risk coverage, session timeline, file:line citations. Saved to `.claude/project/cascades/`.
+Outputs: Traceability table, task completion, edge case/risk coverage, session timeline, file:line citations. Saved to `.claude/project/handoff-records/`.
 
 ## `/ai:lint` — Lint & Typecheck
 

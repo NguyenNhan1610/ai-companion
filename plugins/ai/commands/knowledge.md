@@ -11,18 +11,18 @@ $ARGUMENTS
 
 ## Subcommands
 
-- `extract` — scan `.claude/project/{adr,fdr,implementation_plans,cascades,debug}/*.md` for new reusable knowledge; write entries under `.claude/project/knowledge/{type}/`.
+- `extract` — scan `.claude/project/{adr,fdr,implementation_plans,cascades,debug}/*.md` for new reusable knowledge; write entries under `.claude/project/knowledge-entries/{type}/`.
 - `extract --from FDR-03` — extract only from the named document.
-- `search <keywords>` — grep across `.claude/project/knowledge/**/*.md` for matching entries.
+- `search <keywords>` — grep across `.claude/project/knowledge-entries/**/*.md` for matching entries.
 - `search --tag python,security` — filter by tags.
 - `suggest` — given the current working context (recent cascade segment + open files), surface the most relevant knowledge entries.
 - `list` — print all knowledge entries with `id`, `title`, `type`, `tags`, `confidence`.
 
 ## Rules
 
-- Knowledge entries are YAML-front-matter markdown at `.claude/project/knowledge/{type}/{id}.md`.
+- Knowledge entries are YAML-front-matter markdown at `.claude/project/knowledge-entries/{type}/{id}.md`.
 - Template: `plugins/ai/skills/knowledge-base/references/knowledge-entry-template.md`.
 - Every entry needs: `id`, `title`, `type` (pattern|lesson|decision|antipattern), `tags`, `source` references, `confidence` (0-1), `trigger_patterns`.
 - **Deduplicate**: do not create entries that overlap significantly with existing ones — search first.
-- Update `.claude/project/knowledge/index.yaml` after every extraction.
+- Update `.claude/project/knowledge-entries/index.yaml` after every extraction.
 - Use Read/Write/Edit directly; no subagent, no Agent tool.

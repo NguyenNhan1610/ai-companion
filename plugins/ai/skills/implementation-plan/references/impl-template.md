@@ -1,12 +1,24 @@
-# IMPL-{NN}: {Feature/Decision Title}
+---
+id: IMPL-{NN}
+type: implementation-plan
+slug: {kebab-slug}
+title: {Feature/Decision Title}
+status: draft                                   # draft | active | superseded | deprecated
+upstream:                                       # FDR is canonical; may also include ADR directly
+  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
+downstream: []                                  # patched by TODO generator
+supersedes: []
+superseded_by: null
+source_tp: null                                 # full path to TP or null for lite flow
+method: {pragmatic|tdd|agile|kanban|shape-up}
+total_effort: {summary string}
+critical_path_duration: {e.g., 14d}
+parallel_tracks: {number}
+created: {YYYY-MM-DD}
+updated: {YYYY-MM-DD}
+---
 
-**Date:** {YYYY-MM-DD}
-**Source:** {FDR-XX-slug.md | ADR-XX-slug.md}
-**Source TP:** {TP-XX-slug.md | "—"}
-**Method:** {pragmatic|tdd|agile|kanban|shape-up}
-**Status:** Planning | In Progress | Completed | Abandoned
-**Total effort:** {sum of all tasks} ({critical path duration})
-**Parallel tracks:** {number of independent tracks}
+# IMPL-{NN}: {Feature/Decision Title}
 
 ---
 

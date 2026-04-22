@@ -21,10 +21,10 @@ file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 doc_type=""
 id_prefix=""
 case "$file_path" in
-  */.claude/project/fdr/FDR-*.md)                     doc_type="fdr";  id_prefix="FDR"  ;;
-  */.claude/project/test_plans/TP-*.md)               doc_type="tp";   id_prefix="TP"   ;;
-  */.claude/project/implementation_plans/IMPL-*.md)   doc_type="impl"; id_prefix="IMPL" ;;
-  */.claude/project/todos/TODO-*.yaml)                doc_type="todo"; id_prefix="TODO" ;;
+  */.claude/project/feature-development-records/FDR-*.md)                     doc_type="fdr";  id_prefix="FDR"  ;;
+  */.claude/project/test-plans/TP-*.md)               doc_type="tp";   id_prefix="TP"   ;;
+  */.claude/project/implementation-plans/IMPL-*.md)   doc_type="impl"; id_prefix="IMPL" ;;
+  */.claude/project/todo-lists/TODO-*.yaml)                doc_type="todo"; id_prefix="TODO" ;;
   *) echo '{}'; exit 0 ;;
 esac
 
@@ -58,10 +58,10 @@ upstream_id=$(echo "$upstream_ref" | grep -oP '(ADR|FDR|TP|IMPL)-[0-9]+' | head 
 
 upstream_dir=""
 case "$upstream_type" in
-  adr)  upstream_dir="$project_root/.claude/project/adr" ;;
-  fdr)  upstream_dir="$project_root/.claude/project/fdr" ;;
-  tp)   upstream_dir="$project_root/.claude/project/test_plans" ;;
-  impl) upstream_dir="$project_root/.claude/project/implementation_plans" ;;
+  adr)  upstream_dir="$project_root/.claude/project/architecture-decision-records" ;;
+  fdr)  upstream_dir="$project_root/.claude/project/feature-development-records" ;;
+  tp)   upstream_dir="$project_root/.claude/project/test-plans" ;;
+  impl) upstream_dir="$project_root/.claude/project/implementation-plans" ;;
 esac
 
 upstream_file=""

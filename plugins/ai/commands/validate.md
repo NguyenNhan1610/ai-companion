@@ -18,7 +18,7 @@ $ARGUMENTS
 5. **Load the pair fragment**: `plugins/ai/skills/validation/references/pair-{upstream}-{downstream}.md`. Valid pairs: `adr-fdr`, `fdr-tp`, `fdr-impl`, `tp-impl`, `impl-todo`, `adr-impl`, `fdr-todo`. Invalid pair → emit error "Invalid pair. Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip)".
 6. **Read both docs**, extract tables + cross-reference columns.
 7. **Check each criterion** from the pair fragment: coverage, orphan traces, structural completeness. Every gap must reference a specific upstream item ID.
-8. **Write report** to `.claude/project/validations/VAL-{NN}-{upstream}-to-{downstream}.md` with per-criterion PASS/FAIL/WARN.
+8. **Write report** to `.claude/project/validation-reports/VAL-{NN}-{upstream}-to-{downstream}.md` with per-criterion PASS/FAIL/WARN.
 
 ## Rules
 

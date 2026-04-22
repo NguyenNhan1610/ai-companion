@@ -32,7 +32,7 @@ Walk the entire document chain, cross-reference evidence, verify code, and produ
 
 ## Output
 
-Saved to `.claude/project/traces/TRACE-{NN}-{slug}.md`:
+Saved to `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md`:
 - Acceptance Criteria Chain matrices (AAC→FAC→EAC→TC with code verification)
 - Document chain diagram (Mermaid with color-coded status, TP included)
 - Edge case coverage matrix with file:line verification

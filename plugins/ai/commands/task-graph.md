@@ -40,4 +40,4 @@ Nodes show as `task-NN [priority effort status] title`. Unreachable tasks (disco
 
 - Read-only. Never modify the todo-list.
 - If validation errors exist, the script prints them to stderr and still renders the current DAG.
-- Legacy todos in `.claude/project/todos/` are still readable during the transition, but new ones belong in `.claude/project/todo-lists/`.
+- Todo-lists live at `.claude/project/todo-lists/TODO-{NN}-{slug}.yaml`.

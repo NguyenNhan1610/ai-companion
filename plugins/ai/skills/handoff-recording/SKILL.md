@@ -19,7 +19,7 @@ Analyze raw cascade change logs and produce structured implementation records wi
 
 ## What It Produces
 
-Saved to `.claude/project/cascades/REC-{NN}-{slug}.md`:
+Saved to `.claude/project/handoff-records/REC-{NN}-{slug}.md`:
 
 - **Traceability table** — links to source ADR/FDR/IMPL documents
 - **Task completion** — which IMPL tasks are done, partial, not started (with evidence)

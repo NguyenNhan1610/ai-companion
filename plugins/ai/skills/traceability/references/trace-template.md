@@ -1,10 +1,25 @@
-# TRACE-{NN}: {Feature/Decision Title}
+---
+id: TRACE-{NN}
+type: traceability-report
+slug: {kebab-slug}
+title: {Feature/Decision Title}
+status: active                                  # draft | active | superseded | deprecated
+upstream:                                       # the seed doc(s) this trace walks
+  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
+downstream: []
+supersedes: []
+superseded_by: null
+seed: {FDR-{NN} | ADR-{NN} | free-form query text}
+mode: standard                                  # standard | verify
+verdict: needs-review                           # ready-to-ship | not-ready | needs-review
+coverage_complete: {N}
+coverage_total: {N}
+coverage_percent: {N}
+created: {YYYY-MM-DD}
+updated: {YYYY-MM-DD}
+---
 
-**Date:** {YYYY-MM-DD}
-**Seed:** {FDR-XX / ADR-XX / query text}
-**Mode:** {standard / verify}
-**Status:** {READY TO SHIP / NOT READY / NEEDS REVIEW}
-**Coverage:** {N}% — {complete}/{total} items verified
+# TRACE-{NN}: {Feature/Decision Title}
 
 ---
 

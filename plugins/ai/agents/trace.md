@@ -9,22 +9,22 @@ You are a traceability agent. You walk the entire document chain, cross-referenc
 ## Process
 
 ### Phase 0: INIT
-1. `mkdir -p .claude/project/traces`
-2. Scan `.claude/project/traces/TRACE-*.md` for existing reports
+1. `mkdir -p .claude/project/traceability-reports`
+2. Scan `.claude/project/traceability-reports/TRACE-*.md` for existing reports
 3. Next number = highest + 1 (or 01)
-4. File: `.claude/project/traces/TRACE-{NN}-{slug}.md`
+4. File: `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md`
 
 ### Phase 1: DISCOVER (parallel sub-agents)
 Spawn up to 3 parallel `Agent` sub-agents to collect evidence fast:
 
 **Sub-agent A: Document Chain Discovery**
-- `Glob` for `.claude/project/adr/ADR-*.md` — find related ADRs
-- `Glob` for `.claude/project/fdr/FDR-*.md` — find related FDRs
-- `Glob` for `.claude/project/implementation_plans/IMPL-*.md` — find IMPLs
-- `Glob` for `.claude/project/test_plans/TP-*.md` — find test plans
-- `Glob` for `.claude/project/todos/TODO-*.yaml` — find TODOs
-- `Glob` for `.claude/project/cascades/REC-*.md` — find cascade records
-- `Glob` for `.claude/project/knowledge/index.yaml` — find knowledge entries
+- `Glob` for `.claude/project/architecture-decision-records/ADR-*.md` — find related ADRs
+- `Glob` for `.claude/project/feature-development-records/FDR-*.md` — find related FDRs
+- `Glob` for `.claude/project/implementation-plans/IMPL-*.md` — find IMPLs
+- `Glob` for `.claude/project/test-plans/TP-*.md` — find test plans
+- `Glob` for `.claude/project/todo-lists/TODO-*.yaml` — find TODOs
+- `Glob` for `.claude/project/handoff-records/REC-*.md` — find cascade records
+- `Glob` for `.claude/project/knowledge-entries/index.yaml` — find knowledge entries
 - Read each document header to check if related to the seed query
 - Return: list of related documents with their IDs and status
 
@@ -100,7 +100,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
 2. Coverage heatmap: edge cases x implementation status.
 
 ### Phase 5: WRITE
-Save report to `.claude/project/traces/TRACE-{NN}-{slug}.md` following the template in `references/trace-template.md`.
+Save report to `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md` following the template in `references/trace-template.md`.
 
 If `--verify` flag: add a **Verdict** section at the top:
 - **READY TO SHIP** — all high-severity items covered, tests pass
@@ -116,4 +116,21 @@ If `--verify` flag: add a **Verdict** section at the top:
 - Coverage percentages must be calculated from actual counts, not estimated.
 - The `--verify` flag makes the verdict section required and gaps are "findings" not "suggestions".
 - Do NOT fix any gaps. Only report them.
-- Save to `.claude/project/traces/`.
+- Save to `.claude/project/traceability-reports/`.
+
+
+## Post-write sync
+
+After writing the document, patch each upstream parent's `downstream:` list by running:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" sync <path-to-new-doc>
+```
+
+And validate the frontmatter matches the planning-docs schema:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <path-to-new-doc>
+```
+
+Both must succeed before the write is considered complete.

@@ -4,7 +4,7 @@
 ## Full Flow Guidance
 
 ### ADR Inheritance
-1. Read the source ADR specified in `--adr` flag or found in `.claude/project/adr/`
+1. Read the source ADR specified in `--adr` flag or found in `.claude/project/architecture-decision-records/`
 2. Extract the AAC table from the ADR
 3. Record inherited AAC IDs for the FDR header `Inherits AAC` field
 

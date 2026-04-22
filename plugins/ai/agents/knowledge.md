@@ -65,7 +65,7 @@ If `--from FDR-03` specified, only extract from that document.
 
 ## Knowledge Entry Format
 
-Every entry at `.claude/project/knowledge/{type}/{ID}-{slug}.md`:
+Every entry at `.claude/project/knowledge-entries/{type}/{ID}-{slug}.md`:
 
 ```markdown
 ---
@@ -106,7 +106,7 @@ updated: {YYYY-MM-DD}
 
 ## Index Format
 
-`.claude/project/knowledge/index.yaml`:
+`.claude/project/knowledge-entries/index.yaml`:
 
 ```yaml
 entries:
@@ -140,6 +140,6 @@ When other agents (FDR, ADR, IMPL, debug) are starting work:
 1. The agent reads the task description
 2. Matches against `trigger_patterns` in `index.yaml`
 3. If matches found, prepends relevant knowledge to the agent's context
-4. Format: "Past experience suggests: [LES-01] N+1 query patterns are common in Django list views. See `.claude/project/knowledge/lessons/LES-01-n+1-query-fix.md`"
+4. Format: "Past experience suggests: [LES-01] N+1 query patterns are common in Django list views. See `.claude/project/knowledge-entries/lessons/LES-01-n+1-query-fix.md`"
 
 This is implemented by having the FDR/ADR/IMPL/debug agents check the knowledge index as part of their Phase 1 exploration.
