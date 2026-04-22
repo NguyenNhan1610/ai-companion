@@ -1,15 +1,12 @@
 # Utility Commands
 
-## `/ai:mermaid` — Diagrams
+## `/ai:mermaid` — Diagram Validation
 
 ```bash
 /ai:mermaid validate graph TD; A-->B; B-->C
-/ai:mermaid render graph TD; A[Start]-->B{Decision}; B-->|Yes|C[End]
-/ai:mermaid render --format png graph TD; A-->B
-/ai:mermaid render -o docs/arch.svg graph TD; A-->B
 ```
 
-Inline content — no file needed. Outputs SVG (default) or PNG. Requires mmdc (`/ai:setup --install-mermaid`).
+Inline content — no file needed. Only validation is supported; rendering to SVG/PNG was removed. Requires mmdc (`/ai:setup --install-mermaid`).
 
 ## `/ai:knowledge` — Knowledge Base
 

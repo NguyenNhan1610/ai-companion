@@ -31,7 +31,7 @@ Use Codex from inside Claude Code for code reviews, multi-agent discussions, hyp
 | Document what was built | `/ai:cascade` |
 | Extract project knowledge | `/ai:knowledge extract` |
 | Lint/typecheck changed files | `/ai:lint` or `/ai:lint --fix` |
-| Render a diagram | `/ai:mermaid render graph TD; A-->B` |
+| Validate a diagram | `/ai:mermaid validate graph TD; A-->B` |
 | Install coding rules | `/ai:setup --install-rules fastapi,nextjs` |
 | Check job progress | `/ai:status` |
 | Get job result | `/ai:result` |

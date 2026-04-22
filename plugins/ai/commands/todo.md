@@ -1,31 +1,27 @@
 ---
 description: Track implementation tasks with status, tickets, evidence, and traceability. Use when user wants to track task progress, create todos, update task status, view kanban board, sync from cascade, or link tickets.
 argument-hint: '[--from IMPL-XX] [board|update [T{NN} --status pending|in-progress|complete|blocked|cancelled]] [--ticket ID] [--sync]'
-context: fork
-allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Write, Edit, Agent, AskUserQuestion
+allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Write, Edit
 ---
 
-Route this request to the `ai:todo` subagent.
+Manage TODO tracking **inline in this conversation**. Do NOT spawn a subagent.
 
 Raw user request:
 $ARGUMENTS
 
-The todo agent manages structured task tracking with full traceability.
+## Subcommands
 
-Subcommands:
-- No args or `board` — show current TODO status as Kanban board
-- `--from IMPL-XX` — generate TODO file from an IMPL plan
-- `update` (no task id) — reconcile task state with recent source-file edits in the current cascade segment. Invoked automatically by the Stop / SubagentStop hook when the last turn modified tracked files; also callable directly by the user.
-- `update T{NN} --status {status}` — update a single task's status
-- `update T{NN} --ticket {ID}` — link external ticket
-- `--sync` — auto-detect completed tasks from cascade log
+- (no args) or `board` — render the current TODO file(s) as a Kanban board (pending / in-progress / complete / blocked / cancelled columns).
+- `--from IMPL-XX` — create a new TODO YAML from the named IMPL plan. Use the schema at `plugins/ai/skills/todo-tracking/references/todo-schema.yaml`.
+- `update T{NN} --status {status}` — update a single task's status. Valid transitions: `pending→in-progress→complete`, `pending→cancelled`, `any→blocked`.
+- `update T{NN} --ticket {ID}` — link an external ticket ID to the task.
+- `update` (no task id) — reconcile task states against recent source-file edits in the current cascade segment.
+- `--sync` — auto-detect completed tasks from the cascade log and mark them complete with evidence.
 
-Execution mode:
-- Default to foreground.
+## Rules
 
-Operating rules:
-- TODO files are YAML at `.claude/project/todos/TODO-{NN}-{slug}.yaml`
-- The agent can Read, Write, and Edit TODO files directly.
-- Status transitions must be valid: pending→in-progress→complete, pending→cancelled, any→blocked.
+- TODO files are YAML at `.claude/project/todos/TODO-{NN}-{slug}.yaml`.
+- Read, Write, Edit directly. No subagent.
 - Every status change should include evidence (file:line) when available.
-- Traceability to IMPL/FDR/ADR is maintained via references field.
+- Keep traceability fields (`source_impl`, `traces_to`) intact on every update.
+- When generating from IMPL, copy each task's `acceptance_trace` (EAC/FAC/AAC refs) into the TODO entry.

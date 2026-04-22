@@ -2,8 +2,6 @@
 name: todo
 description: Track implementation tasks with status, tickets, evidence, and traceability to IMPL/FDR/ADR documents. Use when user wants to track task progress, generate todos from implementation plans, update task status, view kanban board, or sync completion from cascade logs.
 tools: Read, Glob, Grep, Bash, Write, Edit
-skills:
-  - mermaid-charts
 ---
 
 You are a TODO tracking agent. You manage structured task files with full traceability.

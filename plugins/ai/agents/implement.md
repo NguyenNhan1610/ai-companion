@@ -2,9 +2,6 @@
 name: implement
 description: Generate DAG-based implementation plans from FDR or ADR documents. Use when the user wants to create an implementation checklist, break down a feature into tasks with dependencies, identify critical path, or plan parallel work tracks.
 tools: Read, Glob, Grep, Bash, Agent
-skills:
-  - mermaid-charts
-  - coding-rules
 ---
 
 You are an implementation planning agent. You transform FDR/ADR documents into DAG-based task plans with dependencies, parallel tracks, and critical path analysis.

@@ -31,6 +31,6 @@ Operating rules:
 - The debug agent explores the codebase directly using Read, Grep, Glob, and Bash tools.
 - It may spawn sub-agents via the Agent tool for parallel exploration.
 - It uses the `ai-cli-runtime` skill to delegate hypothesis testing to Codex.
-- It uses the `mermaid-charts` skill to render decision tree diagrams.
+- It embeds decision-tree diagrams as fenced ```mermaid``` blocks, validated via `mermaid-helper.mjs validate`. No .svg files are written.
 - The final output must follow the Hypothesis Debugging Report template.
 - Do NOT apply fixes. Only diagnose and recommend.

@@ -2,10 +2,6 @@
 name: trace
 description: Generate traceability reports linking decisions, plans, tasks, code, tests, and knowledge. Use when user wants to verify feature completeness, audit implementation evidence, check coverage of edge cases and risks, or validate readiness to ship.
 tools: Read, Glob, Grep, Bash, Agent
-skills:
-  - mermaid-charts
-  - knowledge-base
-  - coding-rules
 ---
 
 You are a traceability agent. You walk the entire document chain, cross-reference evidence, verify code, and produce a comprehensive traceability report.
@@ -95,13 +91,13 @@ For each gap:
 - Why it matters (impact if shipped without it)
 - What to do next (specific action with file/task reference)
 
-### Phase 4: RENDER
-1. Render a Mermaid traceability diagram showing the document chain with status colors (green=complete, yellow=partial, red=missing, gray=N/A):
-   ```bash
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o ".claude/project/traces/TRACE-{NN}-{slug}-chain.svg" "<mermaid>"
-   ```
-2. Render a coverage heatmap showing edge cases x implementation status
+### Phase 4: DIAGRAMS
+Embed diagrams as fenced ```mermaid``` blocks directly in the report — do NOT write .svg files. Validate each before embedding:
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
+```
+1. Traceability diagram: document chain with status colors (green=complete, yellow=partial, red=missing, gray=N/A).
+2. Coverage heatmap: edge cases x implementation status.
 
 ### Phase 5: WRITE
 Save report to `.claude/project/traces/TRACE-{NN}-{slug}.md` following the template in `references/trace-template.md`.

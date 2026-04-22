@@ -12,7 +12,6 @@ function createTempFile(content) {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mermaid-"));
   const tmpFile = path.join(tmpDir, "diagram.mmd");
   fs.writeFileSync(tmpFile, content, "utf8");
-  // Puppeteer config for headless rendering (needed for root/CI environments)
   const puppeteerConfig = path.join(tmpDir, "puppeteer-config.json");
   fs.writeFileSync(puppeteerConfig, JSON.stringify({
     args: ["--no-sandbox", "--disable-setuid-sandbox"]
@@ -41,10 +40,10 @@ function validate(content) {
   }
 
   const { tmpDir, tmpFile, puppeteerConfig } = createTempFile(content);
-  const nullOutput = path.join(tmpDir, "out.svg");
+  const scratchOutput = path.join(tmpDir, "out.svg");
 
   try {
-    execSync(`${MMDC} -i "${tmpFile}" -o "${nullOutput}" -p "${puppeteerConfig}" --quiet`, {
+    execSync(`${MMDC} -i "${tmpFile}" -o "${scratchOutput}" -p "${puppeteerConfig}" --quiet`, {
       encoding: "utf8",
       timeout: 30000,
       stdio: ["pipe", "pipe", "pipe"]
@@ -60,56 +59,16 @@ function validate(content) {
   }
 }
 
-function render(content, options = {}) {
-  const mmdc = checkMmdc();
-  if (!mmdc.available) {
-    console.log(JSON.stringify({ success: false, error: "mmdc not installed. Run /ai:setup --install-mermaid" }));
-    process.exit(1);
-  }
-
-  const format = options.format || "svg";
-  const cwd = process.cwd();
-  const outputPath = options.output
-    ? path.resolve(cwd, options.output)
-    : path.resolve(cwd, `diagram.${format}`);
-
-  const outputDir = path.dirname(outputPath);
-  fs.mkdirSync(outputDir, { recursive: true });
-
-  const { tmpDir, tmpFile, puppeteerConfig } = createTempFile(content);
-
-  try {
-    execSync(`${MMDC} -i "${tmpFile}" -o "${outputPath}" -p "${puppeteerConfig}" --quiet`, {
-      encoding: "utf8",
-      timeout: 60000,
-      stdio: ["pipe", "pipe", "pipe"]
-    });
-    console.log(JSON.stringify({
-      success: true,
-      output: outputPath,
-      format,
-      size: fs.statSync(outputPath).size
-    }));
-  } catch (err) {
-    const stderr = err.stderr?.toString() || err.message || "Unknown error";
-    console.log(JSON.stringify({ success: false, error: stderr.trim() }));
-    process.exit(1);
-  } finally {
-    cleanup(tmpDir);
-  }
-}
-
 function printUsage() {
   console.log([
     "Usage:",
     "  node mermaid-helper.mjs check",
     "  node mermaid-helper.mjs validate <mermaid content>",
-    "  node mermaid-helper.mjs render [--format svg|png] [-o output] <mermaid content>",
     "",
-    "Examples:",
-    '  node mermaid-helper.mjs validate "graph TD; A-->B; B-->C"',
-    '  node mermaid-helper.mjs render "graph TD; A-->B; B-->C"',
-    '  node mermaid-helper.mjs render --format png -o docs/arch.png "graph TD; A-->B"'
+    "Validation parses the diagram via mmdc. The rendered SVG is discarded.",
+    "",
+    "Example:",
+    '  node mermaid-helper.mjs validate "graph TD; A-->B; B-->C"'
   ].join("\n"));
 }
 
@@ -129,28 +88,6 @@ function main() {
     const content = args.slice(1).join(" ");
     if (!content.trim()) { console.log(JSON.stringify({ valid: false, errors: ["No content provided"] })); process.exit(1); }
     validate(content);
-    process.exit(0);
-  }
-
-  if (subcommand === "render") {
-    const remaining = args.slice(1);
-    let format = "svg";
-    let output = null;
-    const contentParts = [];
-
-    for (let i = 0; i < remaining.length; i++) {
-      if (remaining[i] === "--format" && i + 1 < remaining.length) {
-        format = remaining[++i];
-      } else if (remaining[i] === "-o" && i + 1 < remaining.length) {
-        output = remaining[++i];
-      } else {
-        contentParts.push(remaining[i]);
-      }
-    }
-
-    const content = contentParts.join(" ");
-    if (!content.trim()) { console.log(JSON.stringify({ success: false, error: "No content provided" })); process.exit(1); }
-    render(content, { format, output });
     process.exit(0);
   }
 

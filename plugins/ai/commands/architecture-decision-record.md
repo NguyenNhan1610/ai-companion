@@ -30,7 +30,6 @@ Scope:
 
 Operating rules:
 - The ADR agent explores the codebase directly using Read, Grep, Glob, Bash.
-- It renders Mermaid diagrams using `node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs"`.
-- Both rendered SVG paths AND raw Mermaid code blocks are included in the output.
+- It validates Mermaid diagrams via `node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate ...` and embeds them as fenced ```mermaid``` blocks. No .svg files are written.
 - The final output must follow the ADR template exactly.
 - Do NOT implement the decision. Only document it.

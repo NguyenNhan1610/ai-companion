@@ -1,19 +1,16 @@
 ---
-description: Validate and render Mermaid.js diagrams from inline content
-argument-hint: 'validate|render [--format svg|png] [-o output] <mermaid content>'
-allowed-tools: Bash(node:*), Bash(mmdc:*), Read, AskUserQuestion
+description: Validate Mermaid.js diagram syntax from inline content
+argument-hint: 'validate <mermaid content>'
+allowed-tools: Bash(node:*), Bash(mmdc:*), Read
 ---
 
-Validate or render a Mermaid.js diagram.
+Validate a Mermaid.js diagram. Rendering is no longer supported — this command only checks syntax.
 
 Raw slash-command arguments:
 `$ARGUMENTS`
 
-Subcommands:
+Subcommand:
 - `validate <content>` — check Mermaid syntax and report errors
-- `render <content>` — render to SVG (default) and save to file
-- `render --format png <content>` — render to PNG
-- `render -o path/to/output.svg <content>` — render to specific output path
 
 Content is inline Mermaid text passed as positional arguments.
 
@@ -23,6 +20,6 @@ Execution:
 node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" $ARGUMENTS
 ```
 
-Return the command output verbatim. For render results, also tell the user the output file path.
+Return the command output verbatim.
 
 If mmdc is not installed, tell the user to run `/ai:setup --install-mermaid`.

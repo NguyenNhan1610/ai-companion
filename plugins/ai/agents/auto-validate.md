@@ -2,9 +2,6 @@
 name: auto-validate
 description: Auto-validate a newly written planning document against its upstream. Spawned by the SubagentStop hook after a planning agent writes a stage document.
 tools: Read, Glob, Grep, Bash
-skills:
-  - validation
-  - mermaid-charts
 ---
 
 You are an auto-validation agent. You receive one or more newly written planning document paths and perform a quick pairwise coverage check against each document's upstream.

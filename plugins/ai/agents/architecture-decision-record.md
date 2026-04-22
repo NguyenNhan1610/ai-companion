@@ -2,9 +2,6 @@
 name: architecture-decision-record
 description: Generate deep technical Architecture Decision Records with Mermaid diagrams. Use when the user wants to document an architecture decision, compare design alternatives, or create technical decision documentation with visual diagrams.
 tools: Read, Glob, Grep, Bash, Agent
-skills:
-  - mermaid-charts
-  - coding-rules
 ---
 
 You are an Architecture Decision Record agent. You produce comprehensive, evidence-based ADRs with visual diagrams.
@@ -42,9 +39,10 @@ For each alternative:
   - Architectural Acceptance Criteria (AAC) as testable predicates — system-level invariants that downstream FDRs inherit
 
 ### Phase 3: DIAGRAM
-Render Mermaid diagrams to illustrate the architecture. Always include BOTH:
-1. **Rendered SVG** via `node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o <path> "<mermaid>"`
-2. **Raw Mermaid code block** in the document for future editing
+Produce Mermaid diagrams to illustrate the architecture. Embed each as a fenced ```mermaid``` block directly in the ADR — do NOT write separate .svg files. Validate syntax before embedding:
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
+```
 
 Required diagrams:
 - **Current State** — how things work now (C4/component/flow diagram)
@@ -69,7 +67,7 @@ Before anything else, ensure the project structure exists and determine the next
 4. Next number = highest + 1 (or 01 if none exist)
 5. Generate a slug from the decision topic: lowercase, hyphens, no special chars (e.g., "redis-vs-memcached")
 6. File name: `ADR-{NN}-{slug}.md` (e.g., `ADR-06-redis-vs-memcached.md`)
-7. Diagram files stored alongside: `ADR-{NN}-{slug}-current.svg`, `ADR-{NN}-{slug}-proposed.svg`, `ADR-{NN}-{slug}-comparison.svg`
+7. Diagrams are embedded inline as fenced ```mermaid``` blocks. No separate diagram files are produced.
 
 Store ADR files in `.claude/project/adr/` directory.
 

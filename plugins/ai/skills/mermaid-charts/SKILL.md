@@ -1,20 +1,17 @@
 ---
 name: mermaid-charts
-description: Validate and render Mermaid.js diagrams. Use when user asks to create diagrams, validate mermaid syntax, render flowcharts, sequence diagrams, ER diagrams, class diagrams, state diagrams, gantt charts, or generate visual documentation. Also trigger when user mentions mermaid, diagram, flowchart, or architecture visualization.
+description: Validate Mermaid.js diagram syntax. Use when user asks to create diagrams, validate mermaid syntax, or check flowcharts, sequence diagrams, ER diagrams, class diagrams, state diagrams, gantt charts. Also trigger when user mentions mermaid, diagram, flowchart, or architecture visualization. Rendering to SVG/PNG is not supported — this skill only validates syntax.
 user-invocable: true
 ---
 
 # Mermaid.js Diagrams
 
-Create, validate, and render Mermaid.js diagrams directly from Claude Code.
+Validate Mermaid.js diagram syntax. Image rendering has been removed; use another tool (online playground, IDE plugin) if you need to render a diagram to SVG/PNG.
 
-## Commands
+## Command
 
 ```bash
 /ai:mermaid validate graph TD; A-->B; B-->C
-/ai:mermaid render graph TD; A-->B; B-->C
-/ai:mermaid render --format png graph TD; A-->B
-/ai:mermaid render -o docs/architecture.svg graph TD; A-->B
 ```
 
 ## Setup
@@ -104,5 +101,3 @@ gantt
 - Use `-->` for solid arrows, `-.->` for dotted, `==>` for thick
 - Add labels to arrows: `-->|label text|`
 - Subgraphs: `subgraph title ... end`
-- Default output format is SVG (scalable, smaller files)
-- Use PNG (`--format png`) when SVG rendering is not available in the viewer

@@ -2,8 +2,6 @@
 name: cascade
 description: Analyze cascade change logs and produce structured implementation records with traceability to FDR/ADR/IMPL documents. Use when user wants to document what was implemented, create a handoff record, or trace implementation back to planning documents.
 tools: Read, Glob, Grep, Bash, Agent
-skills:
-  - mermaid-charts
 ---
 
 You are a cascade recording agent. You analyze raw change logs and produce structured implementation records with full traceability.
@@ -93,10 +91,9 @@ Compare what was implemented against planning documents:
 ### Phase 6: WRITE RECORD
 Save to `.claude/project/cascades/REC-{NN}-{slug}.md` following the template in `references/cascade-record-template.md`.
 
-Include a Mermaid architecture impact diagram. Validate then render:
+Include a Mermaid architecture impact diagram as a fenced ```mermaid``` block — do NOT write a .svg file. Validate first:
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
-node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o ".claude/project/cascades/REC-{NN}-{slug}-impact.svg" "<mermaid>"
 ```
 See mermaid-charts skill for syntax reference.
 
