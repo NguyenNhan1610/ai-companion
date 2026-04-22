@@ -1,6 +1,6 @@
 ---
 description: Check whether the AI backend CLI is ready and optionally init project, toggle review gate, install coding rules, or install Mermaid.js
-argument-hint: '[--init] [--init --ui] [--provider codex|claude] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid] [--install-statusline]'
+argument-hint: '[--init] [--init --ui] [--provider codex|claude] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--engine claude|windsurf|codex|copilot|all] [--install-mermaid] [--install-statusline]'
 allowed-tools: Bash(node:*), Bash(npm:*), AskUserQuestion
 ---
 
@@ -21,14 +21,23 @@ If the backend is installed but not authenticated:
 - For Claude: tell the user to launch `!claude` interactively once to sign in (credentials are stored in `~/.claude`).
 
 If `--install-rules` is provided:
-- Copies bundled coding rules into the project's `.claude/rules/` directory.
-- Accepts comma-separated specifiers: `python`, `fastapi`, `django`, `typescript`, `nextjs`
-- Techstack specifiers (fastapi, django, nextjs) include the base language rules automatically.
-- Skips files that already exist in the target directory.
-- Examples:
-  - `--install-rules fastapi` — installs FastAPI + Python rules
-  - `--install-rules nextjs` — installs Next.js + TypeScript rules
-  - `--install-rules fastapi,nextjs` — installs both stacks
+- Installs bundled coding rules for one or more AI coding engines. Default engine is `claude` only.
+- Specifiers (comma-separated): `python`, `fastapi`, `django`, `typescript`, `nextjs`. Techstack specifiers pull in the base language rules automatically.
+- Engines via `--engine`: `claude` | `windsurf` | `codex` | `copilot` | `all`.
+
+Per-engine output:
+
+| Engine | Target | Shape |
+|---|---|---|
+| `claude` | `.claude/rules/{stack}/*.md` | One file per topic. Skips existing files. |
+| `windsurf` | `.windsurf/rules/*.md` | One file per topic, flat directory. Skips existing. |
+| `codex` | `AGENTS.md` at repo root | Single file, contributions wrapped in `<!-- BEGIN ai-companion-rules -->` ... `<!-- END ai-companion-rules -->` markers. Re-running replaces only the marked block. |
+| `copilot` | `.github/copilot-instructions.md` | Same marker convention as `codex`. |
+
+Examples:
+- `--install-rules fastapi` — FastAPI + Python rules into `.claude/rules/`.
+- `--install-rules nextjs --engine windsurf` — Next.js + TypeScript rules into `.windsurf/rules/`.
+- `--install-rules fastapi,nextjs --engine all` — all stacks into all four engine locations.
 
 If `--install-statusline` is provided:
 - Writes the `statusLine` config to `~/.claude/settings.json` pointing at the plugin's `statusline-handler.mjs`.

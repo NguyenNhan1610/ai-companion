@@ -20,6 +20,7 @@ registerBackend(createClaudeBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import { collectReviewContext, collectFullCodebaseContext, collectCommitEffectContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
+import { installRulesForEngines, RULES_MAPPING as ENGINE_RULES_MAPPING, VALID_ENGINES } from "./lib/rules-install.mjs";
 import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate, loadCouncilPromptTemplate, loadProjectRules } from "./lib/prompts.mjs";
 import {
   generateJobId,
@@ -225,59 +226,9 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
 
 const RULES_TEMPLATE_DIR = path.join(ROOT_DIR, "rules-templates");
 
-const RULES_MAPPING = {
-  python: { dir: "python", files: ["python-security", "python-performance", "python-antipatterns", "python-architecture"] },
-  fastapi: { dir: "python", files: ["fastapi-security", "fastapi-performance", "fastapi-antipatterns", "python-security", "python-performance", "python-antipatterns", "python-architecture"] },
-  django: { dir: "python", files: ["django-security", "django-performance", "python-security", "python-performance", "python-antipatterns", "python-architecture"] },
-  typescript: { dir: "typescript", files: ["typescript-security", "typescript-performance", "typescript-antipatterns", "typescript-architecture"] },
-  nextjs: { dir: "typescript", files: ["nextjs-security", "nextjs-performance", "nextjs-architecture", "nextjs-antipatterns", "typescript-security", "typescript-performance", "typescript-antipatterns", "typescript-architecture"] }
-};
-
-function installRules(cwd, specifiers) {
-  const installed = [];
-  const skipped = [];
-  const targetBase = path.join(cwd, ".claude", "rules");
-
-  for (const spec of specifiers) {
-    const parts = spec.toLowerCase().split(/[:/]/);
-    let language = parts[0];
-    let techstack = parts.length > 1 ? parts[1] : null;
-
-    const key = techstack || language;
-    const mapping = RULES_MAPPING[key];
-    if (!mapping) {
-      skipped.push(`Unknown: "${spec}" (available: ${Object.keys(RULES_MAPPING).join(", ")})`);
-      continue;
-    }
-
-    const targetDir = path.join(targetBase, mapping.dir);
-    fs.mkdirSync(targetDir, { recursive: true });
-
-    for (const fileName of mapping.files) {
-      const srcFile = path.join(RULES_TEMPLATE_DIR, mapping.dir, `${fileName}.md`);
-      const destFile = path.join(targetDir, `${fileName}.md`);
-
-      if (!fs.existsSync(srcFile)) {
-        skipped.push(`Template not found: ${fileName}.md`);
-        continue;
-      }
-
-      if (fs.existsSync(destFile)) {
-        skipped.push(`Already exists: ${mapping.dir}/${fileName}.md`);
-        continue;
-      }
-
-      fs.copyFileSync(srcFile, destFile);
-      installed.push(`${mapping.dir}/${fileName}.md`);
-    }
-  }
-
-  return { installed, skipped };
-}
-
 async function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
-    valueOptions: ["cwd", "provider", "install-rules"],
+    valueOptions: ["cwd", "provider", "install-rules", "engine"],
     booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "install-statusline", "init", "ui"]
   });
 
@@ -297,15 +248,18 @@ async function handleSetup(argv, backend) {
   // Handle --install-rules
   if (options["install-rules"]) {
     const specifiers = options["install-rules"].split(",").map((s) => s.trim()).filter(Boolean);
-    const result = installRules(cwd, specifiers);
+    const engines = options.engine
+      ? options.engine.split(",").map((s) => s.trim()).filter(Boolean)
+      : ["claude"];
+    const result = installRulesForEngines(cwd, specifiers, engines, RULES_TEMPLATE_DIR);
     if (result.installed.length > 0) {
-      actionsTaken.push(`Installed ${result.installed.length} rules: ${result.installed.join(", ")}`);
+      actionsTaken.push(`Installed ${result.installed.length} rule files into ${result.engines.join(", ")}: ${result.installed.join(", ")}`);
     }
     if (result.skipped.length > 0) {
       actionsTaken.push(`Skipped: ${result.skipped.join("; ")}`);
     }
     if (result.installed.length === 0 && result.skipped.length === 0) {
-      actionsTaken.push(`No rules matched for "${options["install-rules"]}". Available: ${Object.keys(RULES_MAPPING).join(", ")}`);
+      actionsTaken.push(`No rules matched for "${options["install-rules"]}". Available: ${Object.keys(ENGINE_RULES_MAPPING).join(", ")}`);
     }
     outputResult(
       options.json
