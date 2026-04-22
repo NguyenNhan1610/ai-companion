@@ -226,6 +226,141 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
 
 const RULES_TEMPLATE_DIR = path.join(ROOT_DIR, "rules-templates");
 
+const WORKFLOW_BEGIN = "<!-- BEGIN ai-companion-workflow -->";
+const WORKFLOW_END = "<!-- END ai-companion-workflow -->";
+
+function buildWorkflowBlock() {
+  return `${WORKFLOW_BEGIN}
+# AI Companion workflow
+
+This project uses the AI Companion plugin for Claude Code. Planning documents live under \`.project/\`; runtime state lives under \`.claude/\`.
+
+## Project structure
+
+- \`.project/architecture-decision-records/\` — \`ADR-{NN}-{slug}.md\` — architecture decisions with trade-offs and diagrams
+- \`.project/feature-development-records/\` — \`FDR-{NN}-{slug}.md\` — feature plans with edge cases, risks, impact analysis
+- \`.project/test-plans/\` — \`TP-{NN}-{slug}.md\` — test plans with FAC/AAC traceability
+- \`.project/implementation-plans/\` — \`IMPL-{NN}-{slug}.md\` — DAG task plans with EAC + critical path
+- \`.project/todo-lists/\` — \`TODO-{NN}-{slug}.yaml\` — task tracking with explicit DAG, priority, confidence, effort
+- \`.project/handoff-records/\` — \`HANDOFF-{NN}-{slug}.md\` — implementation records with traceability
+- \`.project/traceability-reports/\` — \`TRACE-{NN}-{slug}.md\` — ship-readiness verification
+- \`.project/validation-reports/\` — \`VAL-{NN}-{upstream}-to-{downstream}.md\` — pairwise structural checks
+- \`.project/knowledge-entries/\` — patterns, lessons, decisions, antipatterns
+- \`.project/scripts/hypothesis/\` — investigative scripts (\`H{NN}_{slug}.py\` + \`_result.json\`)
+- \`.project/cascades/\` — auto-generated change log (gitignored)
+- \`.claude/rules/\` — on-demand coding rules (install via \`/ai:setup --install-rules\`)
+
+## Planning document frontmatter
+
+Every planning doc carries strict YAML frontmatter that relates it to upstream and downstream docs by **full relative path** (not bare IDs):
+
+\`\`\`yaml
+---
+id: FDR-03                                    # short-form, matches filename stem
+type: feature-development-record              # full form
+slug: chat-ui-copilot
+title: Chat UI Copilot
+status: draft                                 # draft | active | superseded | deprecated
+upstream:
+  - .project/architecture-decision-records/ADR-02-session-caching.md
+downstream: []                                # patched automatically when downstream docs are created
+created: 2026-04-22
+updated: 2026-04-22
+---
+\`\`\`
+
+When a generator writes a new doc, it also patches each upstream parent's \`downstream:\` list. Validation is enforced by \`plugins/ai/scripts/lib/planning-docs.mjs\`:
+
+\`\`\`bash
+node plugins/ai/scripts/lib/planning-docs.mjs validate <path>   # schema + DAG check
+node plugins/ai/scripts/lib/planning-docs.mjs sync <path>       # patch upstream downstream: lists
+\`\`\`
+
+Short-form prefixes (IDs + filenames only): \`ADR\`, \`FDR\`, \`TP\`, \`IMPL\`, \`TODO\`, \`HANDOFF\`, \`TRACE\`, \`VAL\`.
+
+## TODO DAG
+
+Todo-lists are DAG-first YAML — the dependency graph sits above the task bodies so agents get the graph from the first read. Tasks carry \`priority\` (P0-P3), \`confidence\` (0..1), \`effort\` (XS..XL), \`acceptance_trace\`, and structured \`evidence\`. Edges are explicit with \`kind\` (\`hard\` | \`soft\` | \`data\`) and a required \`reason:\`.
+
+View the graph:
+
+\`\`\`bash
+/ai:task-graph                      # newest todo-list as ASCII tree (default)
+/ai:task-graph TODO-03              # specific todo-list
+/ai:task-graph TODO-03 --ready      # tasks ready to start (no unmet hard/data deps)
+/ai:task-graph TODO-03 --critical-path
+/ai:task-graph TODO-03 --format mermaid|json
+\`\`\`
+
+## Core planning loop
+
+| Step | Command | Writes |
+|---|---|---|
+| 1 | \`/ai:architecture-decision-record\` | \`.project/architecture-decision-records/ADR-*.md\` |
+| 2 | \`/ai:feature-development-record\` | \`.project/feature-development-records/FDR-*.md\` |
+| 3 | \`/ai:test-plan\` (optional) | \`.project/test-plans/TP-*.md\` |
+| 4 | \`/ai:implement\` | \`.project/implementation-plans/IMPL-*.md\` |
+| 5 | \`/ai:todo\` | \`.project/todo-lists/TODO-*.yaml\` |
+| * | \`/ai:plan-feature\` | runs steps 2-5 in one pipeline (FDR → IMPL → TODO) |
+
+Minimum viable chain: FDR → IMPL → TODO (lite mode — no ADR, no TP). Scope flags: \`--scope {backend|frontend|fullstack|api|data}[,lite]\`.
+
+## Build / review / ship loop
+
+| Step | Command | Purpose |
+|---|---|---|
+| 1 | Write code & tests | use \`.project/scripts/hypothesis/\` for investigative scripts |
+| 2 | \`/ai:lint\` | batch lint + typecheck recently changed files |
+| 3 | \`/ai:cascade\` | turn the raw change log into a \`HANDOFF-*.md\` with traceability |
+| 4 | \`/ai:review\` \| \`/ai:adversarial-review\` \| \`/ai:finding-review\` \| \`/ai:git-review\` \| \`/ai:git-effect-review\` \| \`/ai:council\` | AI code review |
+| 5 | \`/ai:validate <upstream> <downstream>\` | pairwise coverage check (ADR→FDR, FDR→IMPL, IMPL→TODO, …) |
+| 6 | \`/ai:trace --verify <seed>\` | walk the frontmatter graph end-to-end, flag gaps, ship/no-ship verdict |
+
+## Debug / delegate / capture
+
+- \`/ai:debug\` — hypothesis-based debugging with a visual decision tree.
+- \`/ai:rescue\` — delegate an open-ended task to a Codex subagent.
+- \`/ai:knowledge\` — extract / search / suggest reusable knowledge.
+- \`/ai:mermaid validate <diagram>\` — syntax check (rendering removed in 5.2).
+- \`/ai:status\` / \`/ai:result\` / \`/ai:cancel\` — manage background jobs.
+- \`/ai:setup\` — check backend readiness, init project, install rules (\`--engine claude|windsurf|codex|copilot|all\`), install statusline, enable review gate.
+
+## Backends
+
+Codex (default, \`--model codex:gpt-5.4\`) and Claude (\`--model claude:opus|max|code|fast\`) are supported. Configure the default in \`plugins/ai/config/defaults.json\` or per-invocation via \`--model provider:model\`.
+
+## Acceptance chain
+
+\`AAC\` (ADR) → \`FAC\` (FDR) → \`TC\` (TP) → \`EAC\` (IMPL) → task \`acceptance_trace\` (TODO). \`/ai:validate\` checks each hop; \`/ai:trace\` verifies the whole chain against code + tests.
+${WORKFLOW_END}
+`;
+}
+
+function upsertWorkflowBlock(absPath, block) {
+  const existing = fs.existsSync(absPath) ? fs.readFileSync(absPath, "utf8") : "";
+  const re = new RegExp(
+    WORKFLOW_BEGIN.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") +
+    "[\\s\\S]*?" +
+    WORKFLOW_END.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") +
+    "\\n?"
+  );
+  let next;
+  let action;
+  if (re.test(existing)) {
+    next = existing.replace(re, block);
+    action = "block refreshed";
+  } else if (existing.trim()) {
+    next = existing.trimEnd() + "\n\n" + block;
+    action = "block appended";
+  } else {
+    next = block;
+    action = "file created";
+  }
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  fs.writeFileSync(absPath, next, "utf8");
+  return action;
+}
+
 async function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "provider", "install-rules", "engine"],
@@ -373,48 +508,16 @@ async function handleSetup(argv, backend) {
       }
     }
 
-    // Append to CLAUDE.md if section doesn't exist
+    // Write the AI Companion workflow block into both CLAUDE.md and AGENTS.md.
+    // Block is delimited by BEGIN/END markers so it can be regenerated on
+    // subsequent inits without clobbering user content around it. AGENTS.md
+    // may also contain a separate <!-- BEGIN ai-companion-rules --> block from
+    // `/ai:setup --install-rules --engine codex` — both blocks coexist.
+    const workflowBlock = buildWorkflowBlock();
     const claudeMdPath = path.join(cwd, "CLAUDE.md");
-    const marker = "## AI Companion Project Structure";
-    let claudeMdAction = "already configured";
-    const claudeSection = `
-${marker}
-
-- \`.project/architecture-decision-records/\` — Architecture Decision Records (ADR-{NN}-{slug}.md)
-- \`.project/feature-development-records/\` — Feature Development Records (FDR-{NN}-{slug}.md)
-- \`.project/test-plans/\` — Test Plans with traceability matrices (TP-{NN}-{slug}.md)
-- \`.project/implementation-plans/\` — DAG task plans (IMPL-{NN}-{slug}.md)
-- \`.project/todo-lists/\` — Task tracking with DAG, priority, confidence, effort (TODO-{NN}-{slug}.yaml)
-- \`.project/handoff-records/\` — Implementation records with traceability (HANDOFF-{NN}-{slug}.md)
-- \`.project/traceability-reports/\` — Traceability reports with coverage verification (TRACE-{NN}-{slug}.md)
-- \`.project/validation-reports/\` — Pairwise validation reports (VAL-{NN}-{upstream}-to-{downstream}.md)
-- \`.project/knowledge-entries/\` — Reusable knowledge: patterns, lessons, decisions, antipatterns
-- \`.project/scripts/hypothesis/\` — Hypothesis test scripts (H{NN}_{slug}.py + _result.json)
-- \`.project/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
-- \`.claude/rules/\` — On-demand coding rules by stack (install via /ai:setup --install-rules)
-
-## AI Companion Workflow
-
-Core loop (ADR → FDR → IMPL → TODO → code → test → lint → cascade → review):
-
-1. \`/ai:architecture-decision-record\` — record architecture decisions with trade-offs and diagrams
-2. \`/ai:feature-development-record\` — plan a feature with edge cases, risks against existing codebase, and impact analysis
-3. \`/ai:implement\` — turn an FDR/ADR into a DAG task plan with critical path
-4. \`/ai:todo\` — track tasks with status, tickets, and evidence links
-5. Write code and tests; use \`.project/scripts/hypothesis/\` for investigative scripts
-6. \`/ai:lint\` — batch lint/typecheck files changed in this segment
-7. \`/ai:cascade\` — turn the change log into an implementation record with traceability
-8. \`/ai:review\` or \`/ai:adversarial-review\` — AI code review against local git state
-9. \`/ai:trace\` — verify decisions, plans, tasks, code, and tests all line up before shipping
-
-Support commands: \`/ai:debug\` (hypothesis-based debugging) · \`/ai:council\` (multi-agent discussion) · \`/ai:knowledge\` (capture/search lessons) · \`/ai:rescue\` (delegate to AI subagent) · \`/ai:status\` · \`/ai:mermaid\` · \`/ai:setup\`
-`;
-
-    const existingContent = fs.existsSync(claudeMdPath) ? fs.readFileSync(claudeMdPath, "utf8") : "";
-    if (!existingContent.includes(marker)) {
-      fs.appendFileSync(claudeMdPath, claudeSection, "utf8");
-      claudeMdAction = "section appended";
-    }
+    const agentsMdPath = path.join(cwd, "AGENTS.md");
+    const claudeMdAction = upsertWorkflowBlock(claudeMdPath, workflowBlock);
+    const agentsMdAction = upsertWorkflowBlock(agentsMdPath, workflowBlock);
 
     const lines = [`# Project Init\n`];
     if (created.length > 0) {
@@ -423,6 +526,7 @@ Support commands: \`/ai:debug\` (hypothesis-based debugging) · \`/ai:council\` 
       lines.push("All directories already exist.");
     }
     lines.push(`CLAUDE.md: ${claudeMdAction}`);
+    lines.push(`AGENTS.md: ${agentsMdAction}`);
 
     // Handle --ui: install deps + start dashboard server
     if (options.ui) {
