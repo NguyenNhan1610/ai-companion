@@ -14,9 +14,17 @@ Fast pairwise checks that a downstream document fulfills its upstream document's
 /ai:validate ADR-05 FDR-03              # explicit pair
 /ai:validate FDR-03 → IMPL-03          # arrow syntax
 /ai:validate FDR-03 IMPL-03            # arrow optional
-/ai:validate FDR-03                     # auto-discovers upstream from header
+/ai:validate FDR-03                     # auto-discovers upstream from frontmatter
 /ai:validate ADR-05 IMPL-03            # skip-step validation
 ```
+
+## How upstream is resolved
+
+In auto-discovery mode (single argument), the downstream doc's `upstream:` frontmatter list is read directly — no prose-header parsing. Each entry is a full relative path, so the upstream file is loaded without globbing.
+
+When two IDs are passed explicitly, the agent globs the canonical directory for each stage (e.g., `.claude/project/feature-development-records/FDR-{NN}*.md`) and then verifies the downstream's `upstream:` list contains the upstream path — mismatch is a PARTIAL verdict at best.
+
+Before producing a VAL report, both docs are schema-validated via `planning-docs.mjs validate`. Malformed frontmatter short-circuits the run with a clear error (no VAL report is written).
 
 ## Valid Pairs
 

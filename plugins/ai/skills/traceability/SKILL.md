@@ -45,11 +45,14 @@ Saved to `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md`:
 
 ## How It Works
 
-1. **Discover** (3 parallel sub-agents): find documents, verify code, collect test evidence
-2. **Cross-reference**: build matrices linking every plan item to implementation evidence
-3. **Gap analysis**: identify missing items by severity
-4. **Render**: Mermaid chain diagram + coverage report
-5. **Verdict**: ship/no-ship based on high-severity gaps
+1. **Discover** (3 parallel sub-agents):
+   - Sub-agent A walks the planning chain via the `upstream:` and `downstream:` frontmatter lists on each doc — these are full relative paths, so traversal is deterministic and a missing file is a gap rather than a miss.
+   - Sub-agent B verifies referenced code files exist at the cited line numbers.
+   - Sub-agent C collects test evidence via Grep on test files.
+2. **Cross-reference**: build matrices linking every plan item to implementation evidence.
+3. **Gap analysis**: identify missing items by severity. Dangling `upstream:`/`downstream:` paths count as high-severity graph gaps.
+4. **Render**: Mermaid chain diagram + coverage report, embedded inline.
+5. **Verdict**: ship/no-ship based on high-severity gaps.
 
 ## Template Reference
 

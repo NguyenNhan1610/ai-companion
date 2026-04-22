@@ -14,11 +14,17 @@ $ARGUMENTS
 1. **Parse arguments**: strip `→`, `->`, `to` separators. Extract two document IDs, or one for auto-discovery mode.
 2. **Identify stage types** from ID prefixes: `ADR-*`→adr, `FDR-*`→fdr, `TP-*`→tp, `IMPL-*`→impl, `TODO-*`→todo.
 3. **Order upstream/downstream** by chain rank `adr < fdr < tp < impl < todo`. Lower rank = upstream.
-4. **Auto-discovery** (single argument): Read the document's header — FDR has `Source ADR:`, TP has `Source FDR:`, IMPL has `Source:`, TODO has `source_impl:`.
-5. **Load the pair fragment**: `plugins/ai/skills/validation/references/pair-{upstream}-{downstream}.md`. Valid pairs: `adr-fdr`, `fdr-tp`, `fdr-impl`, `tp-impl`, `impl-todo`, `adr-impl`, `fdr-todo`. Invalid pair → emit error "Invalid pair. Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip)".
-6. **Read both docs**, extract tables + cross-reference columns.
-7. **Check each criterion** from the pair fragment: coverage, orphan traces, structural completeness. Every gap must reference a specific upstream item ID.
-8. **Write report** to `.claude/project/validation-reports/VAL-{NN}-{upstream}-to-{downstream}.md` with per-criterion PASS/FAIL/WARN.
+4. **Auto-discovery** (single argument): read the downstream doc's `upstream:` frontmatter list (full relative paths). Pick the entry whose parent directory matches the expected upstream stage. Frontmatter is the single source of truth — do not parse prose headers.
+5. **Schema-validate both docs** before proceeding:
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <upstream-path>
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <downstream-path>
+   ```
+   If either fails, surface the errors and stop — do not write a VAL report for malformed input.
+6. **Load the pair fragment**: `plugins/ai/skills/validation/references/pair-{upstream}-{downstream}.md`. Valid pairs: `adr-fdr`, `fdr-tp`, `fdr-impl`, `tp-impl`, `impl-todo`, `adr-impl`, `fdr-todo`. Invalid pair → emit error "Invalid pair. Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip)".
+7. **Read both docs**, extract tables + cross-reference columns per the fragment.
+8. **Check each criterion** from the pair fragment: coverage, orphan traces, structural completeness. Every gap must reference a specific upstream item ID.
+9. **Write report** to `.claude/project/validation-reports/VAL-{NN}-{upstream}-to-{downstream}.md` with per-criterion PASS/FAIL/WARN, then run `node planning-docs.mjs sync <val-path>` so upstream docs record the new report.
 
 ## Rules
 

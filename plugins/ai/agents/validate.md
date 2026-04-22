@@ -12,30 +12,32 @@ You are a pairwise validation agent. You read two planning documents, cross-refe
 
 1. Parse arguments: strip `→`, `->`, `to` separators. Extract two document IDs, or one for auto-discovery mode.
 2. Identify stage type from each ID prefix:
-   - `ADR-*` → `adr`
-   - `FDR-*` → `fdr`
-   - `TP-*` → `tp`
-   - `IMPL-*` → `impl`
-   - `TODO-*` → `todo`
-3. Determine upstream/downstream by chain ordering: `adr < fdr < tp < impl < todo`. Lower rank = upstream.
-4. **Auto-discovery** (single argument): Read the document's header to find its upstream reference:
-   - FDR: `Source ADR:` field → upstream is ADR
-   - TP: `Source FDR:` field → upstream is FDR
-   - IMPL: `Source:` field → upstream is FDR or ADR
-   - TODO: `source_impl:` YAML field → upstream is IMPL
-5. Construct fragment filename: `pair-{upstream_type}-{downstream_type}.md`
-   - Valid pairs: `adr-fdr`, `fdr-tp`, `fdr-impl`, `tp-impl`, `impl-todo`, `adr-impl`, `fdr-todo`
-   - If the pair doesn't match any valid fragment, emit error: "Invalid pair. Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip)"
-6. Resolve full file paths by globbing:
-   - ADR: `.claude/project/architecture-decision-records/ADR-{NN}*.md`
-   - FDR: `.claude/project/feature-development-records/FDR-{NN}*.md`
-   - TP: `.claude/project/test-plans/TP-{NN}*.md`
-   - IMPL: `.claude/project/implementation-plans/IMPL-{NN}*.md`
-   - TODO: `.claude/project/todo-lists/TODO-{NN}*.yaml`
-   - If either document not found, emit error with the glob pattern tried.
-7. Create output directory: `mkdir -p .claude/project/validation-reports`
-8. Scan `.claude/project/validation-reports/VAL-*.md` for existing reports. Next number = highest + 1 (or 01).
-9. Output file: `.claude/project/validation-reports/VAL-{NN}-{upstream_id}-to-{downstream_id}.md`
+   - `ADR-*` → `architecture-decision-record`
+   - `FDR-*` → `feature-development-record`
+   - `TP-*` → `test-plan`
+   - `IMPL-*` → `implementation-plan`
+   - `TODO-*` → `todo-list`
+3. Determine upstream/downstream by chain ordering: `architecture-decision-record < feature-development-record < test-plan < implementation-plan < todo-list`. Lower rank = upstream.
+4. **Auto-discovery** (single argument): read the document's `upstream:` frontmatter field (list of relative paths). If the list contains the matching upstream stage, use it directly — no prose-header parsing. If `upstream:` is empty (only valid for ADR) → exit with error.
+5. Construct fragment filename: `pair-{upstream_short}-{downstream_short}.md` where the short forms are `adr | fdr | tp | impl | todo`. Valid pairs: `adr-fdr`, `fdr-tp`, `fdr-impl`, `tp-impl`, `impl-todo`, `adr-impl`, `fdr-todo`. If the pair doesn't match, emit error: "Invalid pair. Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip)".
+6. Resolve full file paths:
+   - **Preferred**: use the path from the downstream doc's `upstream:` list (no globbing needed).
+   - **Fallback** when the user passed two IDs explicitly: glob under the canonical directory:
+     - `.claude/project/architecture-decision-records/ADR-{NN}*.md`
+     - `.claude/project/feature-development-records/FDR-{NN}*.md`
+     - `.claude/project/test-plans/TP-{NN}*.md`
+     - `.claude/project/implementation-plans/IMPL-{NN}*.md`
+     - `.claude/project/todo-lists/TODO-{NN}*.yaml`
+   - If either document not found, emit error with the glob pattern or path tried.
+7. Validate both docs pass the schema check before proceeding:
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <upstream-path>
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <downstream-path>
+   ```
+   If either fails, surface the error and stop — do not produce a VAL report for malformed input.
+8. Create output directory: `mkdir -p .claude/project/validation-reports`.
+9. Scan `.claude/project/validation-reports/VAL-*.md` for existing reports. Next number = highest + 1 (or 01).
+10. Output file: `.claude/project/validation-reports/VAL-{NN}-{upstream_id}-to-{downstream_id}.md`.
 
 ### Phase 1: LOAD
 

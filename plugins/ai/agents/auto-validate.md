@@ -10,31 +10,29 @@ You are an auto-validation agent. You receive one or more newly written planning
 
 ### Phase 1: IDENTIFY
 
-For each document path, determine its type and extract the upstream reference:
+For each document path, parse the YAML frontmatter and read the `upstream:` list. Paths are relative to the repo root (e.g., `.claude/project/architecture-decision-records/ADR-02-session-caching.md`).
 
-| Document pattern | Type | Header field for upstream |
-|---|---|---|
-| `.claude/project/feature-development-records/FDR-*.md` | FDR | `Source ADR:` |
-| `.claude/project/test-plans/TP-*.md` | TP | `Source FDR:` |
-| `.claude/project/implementation-plans/IMPL-*.md` | IMPL | `Source:` (FDR path or ID) |
-| `.claude/project/todo-lists/TODO-*.yaml` | TODO | `source_impl:` (YAML field) |
-
-1. Read the first ~30 lines of the document to find the header field.
-2. Extract the upstream document ID (e.g., `ADR-02`, `FDR-03`, `IMPL-01`).
-3. If the upstream field is `—`, `N/A`, empty, or missing → **skip** this document (lite flow, no upstream).
+1. First, run the schema validator on the downstream doc:
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <path>
+   ```
+   If it fails, report the schema errors and skip the coverage check — no point validating coverage on malformed input.
+2. Read the downstream's `upstream:` list. If empty (only valid for ADR) → **skip**.
+3. For each upstream path: if the file does not exist → note as a broken reference and **skip** that pair.
 
 ### Phase 2: RESOLVE
 
-1. Resolve the upstream document path by globbing:
-   - ADR: `.claude/project/architecture-decision-records/ADR-{NN}*.md`
-   - FDR: `.claude/project/feature-development-records/FDR-{NN}*.md`
-   - TP: `.claude/project/test-plans/TP-{NN}*.md`
-   - IMPL: `.claude/project/implementation-plans/IMPL-{NN}*.md`
-2. If upstream file not found → **skip** with a note: "Upstream {ID} not found, skipping validation."
+1. For each valid upstream path, derive the upstream type from the parent directory:
+   - `.../architecture-decision-records/` → `adr`
+   - `.../feature-development-records/` → `fdr`
+   - `.../test-plans/` → `tp`
+   - `.../implementation-plans/` → `impl`
+   Derive the downstream type the same way from the doc being validated.
+2. Build the pair key `pair-{upstream_short}-{downstream_short}.md`. If it's not one of the 7 valid pairs → skip this pair with a note.
 3. Check if a VAL report already exists for this pair:
    - Glob `.claude/project/validation-reports/VAL-*-{upstream_id}-to-{downstream_id}.md`
    - If exists → **skip** with a note: "Already validated, see {VAL path}."
-4. For IMPL documents: also check if a TP exists for the same feature. If so, queue a second validation pair (TP→IMPL).
+4. For IMPL documents whose `upstream:` also references a TP: queue the TP→IMPL pair as well. Detect this by checking the IMPL's `upstream:` for a path under `.claude/project/test-plans/`.
 
 ### Phase 3: VALIDATE
 

@@ -18,15 +18,12 @@ You are a traceability agent. You walk the entire document chain, cross-referenc
 Spawn up to 3 parallel `Agent` sub-agents to collect evidence fast:
 
 **Sub-agent A: Document Chain Discovery**
-- `Glob` for `.claude/project/architecture-decision-records/ADR-*.md` — find related ADRs
-- `Glob` for `.claude/project/feature-development-records/FDR-*.md` — find related FDRs
-- `Glob` for `.claude/project/implementation-plans/IMPL-*.md` — find IMPLs
-- `Glob` for `.claude/project/test-plans/TP-*.md` — find test plans
-- `Glob` for `.claude/project/todo-lists/TODO-*.yaml` — find TODOs
-- `Glob` for `.claude/project/handoff-records/REC-*.md` — find cascade records
-- `Glob` for `.claude/project/knowledge-entries/index.yaml` — find knowledge entries
-- Read each document header to check if related to the seed query
-- Return: list of related documents with their IDs and status
+- Start from the seed doc path (for example `FDR-03`). Read its frontmatter and walk the graph via the `upstream:` and `downstream:` lists — these are full relative paths, loadable directly.
+- Transitively follow both directions until no new docs appear. This yields the entire planning chain for the feature: architecture-decision-record, feature-development-record, test-plan, implementation-plan, todo-list, handoff-record(s), traceability-report(s).
+- Also `Glob` `.claude/project/knowledge-entries/index.yaml` for related knowledge entries (they are not part of the graph).
+- For each doc found, parse its frontmatter to extract `id`, `type`, `status`, `title`.
+- Prefer frontmatter-driven traversal over `Glob`: it is precise and surfaces broken references explicitly (a listed path that does not exist is a gap, not a miss).
+- Return: the walked graph as a list of nodes with their IDs, types, statuses, and paths.
 
 **Sub-agent B: Code Evidence Collection**
 - If FDR/IMPL found, extract the `affected files` and `evidence` sections
