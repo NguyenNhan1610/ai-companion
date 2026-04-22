@@ -1,0 +1,450 @@
+# TODO-03: Chat UI Copilot Experience
+# New schema per planning-docs.mjs. See plugins/ai/skills/todo-tracking/references/todo-schema.yaml.
+
+# ── Header ──────────────────────────────────────────────────────────────
+
+id: TODO-03
+type: todo-list
+slug: chat-ui-copilot-experience
+title: Chat UI Copilot Experience
+status: active
+
+upstream:
+  - .claude/project/implementation-plans/IMPL-03-chat-ui-copilot-experience.md
+downstream: []
+
+supersedes: []
+superseded_by: null
+created: 2026-04-09
+updated: 2026-04-22
+
+# ── DAG block (agents read this first) ──────────────────────────────────
+
+dependencies:
+  - from: task-01
+    to: task-03
+    kind: hard
+    reason: ChatInput component uses ChatMessage interface from task-01
+  - from: task-19
+    to: task-03
+    kind: hard
+    reason: ChatInput styling depends on design tokens from task-19
+  - from: task-01
+    to: task-04
+    kind: hard
+    reason: CompactWidget wrapper types reference shared event types from task-01
+  - from: task-19
+    to: task-04
+    kind: hard
+    reason: CompactWidget styling uses design tokens from task-19
+  - from: task-01
+    to: task-05
+    kind: hard
+    reason: server chat endpoint serializes EventType + ChatMessage shapes from task-01
+  - from: task-05
+    to: task-06
+    kind: hard
+    reason: bidirectional WebSocket upgrade builds on the REST endpoint from task-05
+  - from: task-03
+    to: task-07
+    kind: hard
+    reason: useChatSubmit is wired to the ChatInput component from task-03
+  - from: task-06
+    to: task-07
+    kind: data
+    reason: useChatSubmit sends messages through the WS transport from task-06
+  - from: task-01
+    to: task-08
+    kind: hard
+    reason: EventGrouper groups events keyed by turnId added in task-01
+  - from: task-08
+    to: task-09
+    kind: hard
+    reason: ConversationTurn renders the grouped events produced by task-08
+  - from: task-04
+    to: task-10
+    kind: hard
+    reason: all 14 compact widget variants extend the wrapper from task-04
+  - from: task-10
+    to: task-11
+    kind: hard
+    reason: DetailPanel expands the compact widgets produced in task-10
+  - from: task-11
+    to: task-12
+    kind: hard
+    reason: widget-to-detail click routing targets the panel from task-11
+  - from: task-02
+    to: task-13
+    kind: hard
+    reason: ChatFeed rewrite is feature-flagged via CHAT_INPUT_ENABLED from task-02
+  - from: task-03
+    to: task-13
+    kind: hard
+    reason: ChatFeed embeds the ChatInput component from task-03
+  - from: task-07
+    to: task-13
+    kind: hard
+    reason: ChatFeed wires user submissions via useChatSubmit from task-07
+  - from: task-09
+    to: task-13
+    kind: hard
+    reason: ChatFeed renders conversation turns produced by task-09
+  - from: task-12
+    to: task-13
+    kind: hard
+    reason: ChatFeed depends on widget routing from task-12
+  - from: task-13
+    to: task-14
+    kind: hard
+    reason: keyboard-shortcut + focus integration targets the rewritten ChatFeed from task-13
+  - from: task-13
+    to: task-15
+    kind: hard
+    reason: scroll recalibration targets the rewritten ChatFeed from task-13
+  - from: task-13
+    to: task-16
+    kind: soft
+    reason: responsive layout adjustments polish the rewritten ChatFeed from task-13 but can ship separately
+  - from: task-05
+    to: task-17
+    kind: hard
+    reason: input validation guards the endpoint from task-05
+  - from: task-06
+    to: task-17
+    kind: hard
+    reason: input validation also covers the WS path from task-06
+  - from: task-13
+    to: task-18
+    kind: hard
+    reason: client ring buffer caps the in-memory history maintained by the ChatFeed from task-13
+  - from: task-13
+    to: task-20
+    kind: hard
+    reason: unit tests cover the rewritten ChatFeed from task-13
+  - from: task-17
+    to: task-20
+    kind: hard
+    reason: unit tests cover the validation logic from task-17
+  - from: task-14
+    to: task-21
+    kind: hard
+    reason: integration tests exercise keyboard flows from task-14
+  - from: task-15
+    to: task-21
+    kind: hard
+    reason: integration tests exercise scroll behaviour from task-15
+  - from: task-20
+    to: task-21
+    kind: hard
+    reason: integration tests build on the unit test suite from task-20
+  - from: task-05
+    to: task-22
+    kind: hard
+    reason: observability wraps the server endpoint from task-05
+  - from: task-13
+    to: task-22
+    kind: hard
+    reason: observability instruments the rewritten ChatFeed from task-13
+  - from: task-21
+    to: task-23
+    kind: hard
+    reason: rollout depends on green integration tests from task-21
+  - from: task-22
+    to: task-23
+    kind: hard
+    reason: rollout depends on observability being in place from task-22
+
+computed:
+  roots: [task-01, task-02, task-19]
+  ready: [task-01, task-02, task-19]
+  critical_path: [task-01, task-04, task-10, task-11, task-12, task-13, task-20, task-21, task-23]
+  critical_path_points: 38
+  parallel_tracks:
+    - [task-01, task-03, task-04, task-05, task-06, task-07, task-08, task-09, task-10, task-11, task-12, task-13, task-14, task-15, task-16, task-17, task-18, task-20, task-21, task-22, task-23]
+    - [task-02]
+    - [task-19]
+
+# ── Task bodies ─────────────────────────────────────────────────────────
+
+tasks:
+  - id: task-01
+    title: Shared types and ChatMessage interface
+    status: ready
+    priority: P0
+    confidence: 0.9
+    effort: S
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: |
+      Add "chat_input" to EventType union. Add turnId field to SessionEvent.
+      Add ChatMessage interface. Remove duplicate SessionEvent type from
+      useEventStream.ts and import from shared/types.ts instead.
+
+  - id: task-02
+    title: Feature flag setup
+    status: ready
+    priority: P0
+    confidence: 0.9
+    effort: S
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: |
+      Add CHAT_INPUT_ENABLED env var support; ChatFeed stays in classic mode
+      when false. Read from import.meta.env.VITE_CHAT_INPUT_ENABLED on the
+      client and thread through Vite config.
+
+  - id: task-03
+    title: ChatInput component
+    status: pending
+    priority: P0
+    confidence: 0.8
+    effort: L
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Multi-line textarea, send-on-enter, paste handling, character cap.
+
+  - id: task-04
+    title: CompactWidget wrapper component
+    status: pending
+    priority: P0
+    confidence: 0.8
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Shared wrapper around all widget variants — chrome, focus, click target.
+
+  - id: task-05
+    title: Server chat endpoint
+    status: pending
+    priority: P0
+    confidence: 0.75
+    effort: L
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: POST /chat — validates, publishes to the event bus.
+
+  - id: task-06
+    title: WebSocket bidirectional messaging
+    status: pending
+    priority: P0
+    confidence: 0.7
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Upgrade the SSE feed to a bidirectional WS; keep SSE as fallback.
+
+  - id: task-07
+    title: useChatSubmit hook
+    status: pending
+    priority: P0
+    confidence: 0.8
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Owns optimistic append + error recovery; consumes ChatInput events.
+
+  - id: task-08
+    title: EventGrouper turn-based grouping
+    status: pending
+    priority: P1
+    confidence: 0.8
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Groups events by turnId so downstream components can render turns.
+
+  - id: task-09
+    title: ConversationTurn component
+    status: pending
+    priority: P1
+    confidence: 0.75
+    effort: L
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Renders a single turn — user message + assistant events inline.
+
+  - id: task-10
+    title: Compact widget variants for all 14 widget types
+    status: pending
+    priority: P0
+    confidence: 0.65
+    effort: XL
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Biggest single task — each widget gets its compact-form variant.
+
+  - id: task-11
+    title: DetailPanel sidebar component
+    status: pending
+    priority: P1
+    confidence: 0.75
+    effort: L
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Slide-in sidebar; renders the full widget detail when clicked.
+
+  - id: task-12
+    title: Widget-to-detail click routing
+    status: pending
+    priority: P1
+    confidence: 0.8
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Wires each compact widget click to the detail panel.
+
+  - id: task-13
+    title: ChatFeed major rewrite
+    status: pending
+    priority: P0
+    confidence: 0.6
+    effort: L
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Assemble ChatInput + grouped turns + widget routing behind the feature flag.
+
+  - id: task-14
+    title: Keyboard shortcuts and focus management
+    status: pending
+    priority: P1
+    confidence: 0.8
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Focus traps, Cmd-K, escape-to-dismiss, arrow-key navigation.
+
+  - id: task-15
+    title: Scroll behaviour recalibration
+    status: pending
+    priority: P1
+    confidence: 0.75
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Sticky-to-bottom, anchor-on-click, smooth follow for new turns.
+
+  - id: task-16
+    title: Responsive layout adjustments
+    status: pending
+    priority: P2
+    confidence: 0.7
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Narrow viewport, detail panel stacking, tablet breakpoints.
+
+  - id: task-17
+    title: Input validation and sanitization
+    status: pending
+    priority: P0
+    confidence: 0.85
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Length caps, unicode normalisation, XSS-safe rendering.
+
+  - id: task-18
+    title: Client-side ring buffer
+    status: pending
+    priority: P1
+    confidence: 0.8
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Cap in-memory turns; evict oldest on overflow.
+
+  - id: task-19
+    title: CSS variables and design tokens
+    status: ready
+    priority: P1
+    confidence: 0.9
+    effort: S
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Spacing scale, colour tokens, font ramp — consumed by tasks 03 and 04.
+
+  - id: task-20
+    title: Unit tests
+    status: pending
+    priority: P0
+    confidence: 0.75
+    effort: L
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Component-level tests for ChatInput, CompactWidget, ConversationTurn, validation.
+
+  - id: task-21
+    title: Integration and E2E tests
+    status: pending
+    priority: P1
+    confidence: 0.65
+    effort: L
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Playwright flows covering submit then stream then detail panel.
+
+  - id: task-22
+    title: Observability metrics and logging
+    status: pending
+    priority: P1
+    confidence: 0.8
+    effort: M
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Turn latency histogram, chat throughput counter, error rate.
+
+  - id: task-23
+    title: Rollout configuration
+    status: pending
+    priority: P1
+    confidence: 0.85
+    effort: S
+    acceptance_trace: []
+    evidence: []
+    ticket: null
+    assigned_to: null
+    notes: Env-based rollout, internal pilot, then 10/50/100.
