@@ -19,7 +19,7 @@ Selection guidance:
 Forwarding rules:
 
 - Use exactly one `Bash` call to invoke `node "${CLAUDE_PLUGIN_ROOT}/scripts/ai-companion.mjs" task ...`.
-- If the user specified `--model provider:model`, pass it through to the `task` call. Supported providers are `codex`, `copilot`, and `claude`. Claude tier aliases are `claude:fast` (Haiku), `claude:code` (Sonnet, default), and `claude:max` (Opus with 1M context).
+- If the user specified `--model provider:model`, pass it through to the `task` call. Supported providers are `codex` and `claude`. Claude tier aliases are `claude:fast` (Haiku), `claude:code` (Sonnet, default), and `claude:max` (Opus with 1M context).
 - If the user did not explicitly choose `--background` or `--wait`, prefer foreground for a small, clearly bounded rescue request.
 - If the user did not explicitly choose `--background` or `--wait` and the task looks complicated, open-ended, multi-step, or likely to keep running for a long time, prefer background execution.
 - You may use the `gpt-5-4-prompting` skill only to tighten the user's request into a better prompt before forwarding it.

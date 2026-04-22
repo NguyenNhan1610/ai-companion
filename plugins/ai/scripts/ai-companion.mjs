@@ -10,14 +10,12 @@ import { parseArgs, splitRawArgumentString } from "./lib/args.mjs";
 import { getBackend, registerBackend } from "./lib/backend.mjs";
 import { loadPluginConfig, resolveProviderAndModel } from "./lib/config.mjs";
 import { createCodexBackend } from "./lib/codex/index.mjs";
-import { createCopilotBackend } from "./lib/copilot/index.mjs";
 import { createClaudeBackend } from "./lib/claude/index.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 // Register available backends at startup
 registerBackend(createCodexBackend());
-registerBackend(createCopilotBackend());
 registerBackend(createClaudeBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import { collectReviewContext, collectFullCodebaseContext, collectCommitEffectContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
@@ -74,7 +72,7 @@ function printUsage() {
   console.log(
     [
       "Usage:",
-      "  node scripts/ai-companion.mjs setup [--provider <codex|copilot|claude>] [--enable-review-gate|--disable-review-gate] [--json]",
+      "  node scripts/ai-companion.mjs setup [--provider <codex|claude>] [--enable-review-gate|--disable-review-gate] [--json]",
       "  node scripts/ai-companion.mjs review [--model <provider:model>] [--wait|--background] [language[/techstack]:aspect]",
       "  node scripts/ai-companion.mjs adversarial-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [focus text]",
       "  node scripts/ai-companion.mjs finding-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>]",
@@ -86,7 +84,7 @@ function printUsage() {
       "  node scripts/ai-companion.mjs result [job-id] [--json]",
       "  node scripts/ai-companion.mjs cancel [job-id] [--json]",
       "",
-      "Model format: --model <provider>:<model>  (e.g., codex:gpt-5.4, copilot:claude-opus-4.5, claude:code)",
+      "Model format: --model <provider>:<model>  (e.g., codex:gpt-5.4, claude:code)",
       "             --model <model>              (uses default provider from config)"
     ].join("\n")
   );
@@ -186,8 +184,6 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
   if (!backendStatus.available) {
     if (backend.name === "codex") {
       nextSteps.push("Install Codex with `npm install -g @openai/codex`.");
-    } else if (backend.name === "copilot") {
-      nextSteps.push("Install Copilot CLI from https://docs.github.com/copilot/how-tos/copilot-cli.");
     } else if (backend.name === "claude") {
       nextSteps.push("Install Claude Code from https://claude.com/claude-code.");
     } else {
@@ -198,8 +194,6 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
     if (backend.name === "codex") {
       nextSteps.push("Run `!codex login`.");
       nextSteps.push("If browser login is blocked, retry with `!codex login --device-auth` or `!codex login --with-api-key`.");
-    } else if (backend.name === "copilot") {
-      nextSteps.push("Run `!copilot login`.");
     } else if (backend.name === "claude") {
       nextSteps.push("Launch `!claude` interactively once to sign in; credentials are stored in ~/.claude.");
     } else {
@@ -956,9 +950,9 @@ async function executeReviewRun(request, backend) {
   } else {
     context = collectReviewContext(request.cwd, target);
   }
-  // Inject project coding rules into the review context so external backends
-  // (Codex, Copilot) see them alongside the code. Rules are appended to
-  // context.content before prompt template interpolation.
+  // Inject project coding rules into the review context so the external backend
+  // sees them alongside the code. Rules are appended to context.content before
+  // prompt template interpolation.
   const codingRules = loadProjectRules(context.repoRoot || request.cwd);
   if (codingRules) {
     context.content = `${context.content}\n\n${codingRules}`;

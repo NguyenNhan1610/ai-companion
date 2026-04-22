@@ -22,7 +22,6 @@ export function loadPluginConfig() {
  *
  * Examples:
  *   "codex:gpt-5.4"     → { provider: "codex",  model: "gpt-5.4" }
- *   "copilot:o3"         → { provider: "copilot", model: "o3" }
  *   "gpt-5.4"            → { provider: <default>, model: "gpt-5.4" }
  *   "spark"              → { provider: <default>, model: <resolved alias> }
  *   null/undefined        → { provider: <default>, model: null }
@@ -44,7 +43,7 @@ export function resolveProviderAndModel(rawModel, config) {
     provider = normalized.slice(0, colonIndex);
     model = normalized.slice(colonIndex + 1);
   } else if (config.providers?.[normalized]) {
-    // Bare provider name (e.g., "--model copilot") selects the provider with its default model
+    // Bare provider name (e.g., "--model codex") selects the provider with its default model
     provider = normalized;
     model = config.providers[normalized]?.defaultModel ?? null;
   } else {

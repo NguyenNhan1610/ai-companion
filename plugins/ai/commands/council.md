@@ -7,7 +7,7 @@ allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 Run a multi-agent council through the shared plugin runtime.
 Multiple AI agents analyze the codebase independently, then debate each other's findings, and a synthesis agent produces the final verdict.
 
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model`. Claude tiers: `--model claude:fast` (Haiku, only for trivial councils), `--model claude:code` (Sonnet, the default), `--model claude:max` (Opus with 1M context, recommended for high-stakes synthesis).
+The provider (Codex, Claude) is selected via `--model provider:model`. Claude tiers: `--model claude:fast` (Haiku, only for trivial councils), `--model claude:code` (Sonnet, the default), `--model claude:max` (Opus with 1M context, recommended for high-stakes synthesis).
 
 Raw slash-command arguments:
 `$ARGUMENTS`

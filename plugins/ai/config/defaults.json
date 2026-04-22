@@ -7,10 +7,6 @@
         "spark": "gpt-5.3-codex-spark"
       }
     },
-    "copilot": {
-      "defaultModel": null,
-      "aliases": {}
-    },
     "claude": {
       "defaultModel": "claude-sonnet-4-6",
       "aliases": {

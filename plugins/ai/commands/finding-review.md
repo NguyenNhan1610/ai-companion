@@ -7,7 +7,7 @@ allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 Run a detailed bug-finding review through the shared plugin runtime.
 Produces structured findings with P0-P3 priority tags, confidence scores, and a correctness verdict.
 Reviews recent changes (diff-based), not the full codebase.
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config.
+The provider (Codex, Claude) is selected via `--model provider:model` or the default from config.
 
 Raw slash-command arguments:
 `$ARGUMENTS`

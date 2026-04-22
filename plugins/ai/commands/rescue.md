@@ -8,7 +8,7 @@ allowed-tools: Bash(node:*), AskUserQuestion
 Route this request to the `ai:rescue` subagent.
 The final user-visible response must be the AI's output verbatim.
 
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model`. Claude tiers: `--model claude:fast` (Haiku), `--model claude:code` (Sonnet, default), `--model claude:max` (Opus with 1M context).
+The provider (Codex, Claude) is selected via `--model provider:model`. Claude tiers: `--model claude:fast` (Haiku), `--model claude:code` (Sonnet, default), `--model claude:max` (Opus with 1M context).
 
 Raw user request:
 $ARGUMENTS

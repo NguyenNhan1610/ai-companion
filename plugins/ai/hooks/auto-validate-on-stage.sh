@@ -1,10 +1,13 @@
 #!/bin/bash
-# SubagentStop hook: auto-validate a newly written planning document
-# against its upstream document. Fires after any subagent stops and
-# checks the cascade log for Write entries targeting planning doc paths.
+# SubagentStop hook: advisory-only notice about newly written planning
+# documents. Fires after any subagent stops and checks the cascade log
+# for Write entries targeting planning doc paths.
 #
-# Emits a blocking systemMessage that tells the assistant to spawn the
-# auto-validate agent. Re-entry is guarded by stop_hook_active.
+# Previously blocked and forced the outer assistant to spawn ai:auto-validate.
+# That caused B/C subagents to appear stuck in initial state because the
+# forced nested spawn never cleanly resolved the original SubagentStop.
+# Now writes an advisory line to stderr and returns an empty decision so
+# the subagent call completes normally.
 
 set -euo pipefail
 
@@ -38,14 +41,6 @@ cascade_file="$cwd/.claude/cascades/$safe_branch.md"
 last_segment=$(tac "$cascade_file" | sed '/^## \[/q' | tac) || true
 
 # Scan for Write entries that target planning document paths.
-# Planning doc patterns:
-#   .claude/project/fdr/FDR-*.md
-#   .claude/project/adr/ADR-*.md
-#   .claude/project/test_plans/TP-*.md
-#   .claude/project/implementation_plans/IMPL-*.md
-#   .claude/project/todos/TODO-*.yaml
-#
-# Exclude validation reports — don't self-trigger.
 planning_docs=()
 seen=""
 
@@ -53,7 +48,6 @@ while IFS= read -r line; do
   filepath=$(echo "$line" | grep -oP '`\K[^`]+' | head -1 || true)
   [ -z "$filepath" ] && continue
 
-  # Only match planning document paths.
   case "$filepath" in
     .claude/project/fdr/FDR-*.md) ;;
     .claude/project/test_plans/TP-*.md) ;;
@@ -62,23 +56,18 @@ while IFS= read -r line; do
     *) continue ;;
   esac
 
-  # Skip ADR (top of chain, nothing to validate against).
-  # Skip validation reports (don't self-trigger).
   case "$filepath" in
     .claude/project/adr/*) continue ;;
     .claude/project/validations/*) continue ;;
   esac
 
-  # Must be a WRITE entry (not just a Read reference).
   case "$line" in
     *WRITE*|*CREATE*|*write*|*create*) ;;
     *) continue ;;
   esac
 
-  # File must exist.
   [ ! -f "$cwd/$filepath" ] && continue
 
-  # Deduplicate.
   case " $seen " in
     *" $filepath "*) continue ;;
   esac
@@ -86,25 +75,13 @@ while IFS= read -r line; do
   planning_docs+=("$filepath")
 done <<< "$last_segment"
 
-# No planning docs written = nothing to validate.
 [ ${#planning_docs[@]} -eq 0 ] && { echo '{}'; exit 0; }
 
-# Build the list of docs to validate.
-doc_list=$(printf -- "- \`%s\`\n" "${planning_docs[@]}")
+# Advisory notice only — log to stderr, do not block.
+{
+  printf 'auto-validate-on-stage: planning document(s) written; run /ai:validate for coverage verification:\n'
+  printf -- "- %s\n" "${planning_docs[@]}"
+} >&2
 
-message="A planning document was just written. Run auto-validation against its upstream.
-
-Documents to validate:
-${doc_list}
-
-Spawn the \`ai:auto-validate\` agent with the file path(s) above. The agent will:
-1. Read each document's header to find its upstream reference
-2. Skip if upstream is \"\u2014\" (lite flow) or doesn't exist
-3. Run a brief pairwise coverage check
-4. Report an inline PASS/PARTIAL/FAIL verdict
-
-Do NOT write a full VAL report \u2014 just report the brief verdict and suggest \`/ai:validate\` for the full report if gaps are found."
-
-payload=$(jq -n --arg reason "$message" '{decision: "block", reason: $reason}')
-echo "$payload"
+echo '{}'
 exit 0

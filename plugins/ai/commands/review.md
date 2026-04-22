@@ -6,7 +6,7 @@ allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 
 Run a full codebase review through the shared plugin runtime.
 Reviews the entire codebase (not just diffs). Optionally filter by aspect (security, performance, architecture, antipatterns) and/or language/techstack.
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config. For full codebase reviews `--model claude:max` (Opus with 1M context) is recommended for best results.
+The provider (Codex, Claude) is selected via `--model provider:model` or the default from config. For full codebase reviews `--model claude:max` (Opus with 1M context) is recommended for best results.
 
 Raw slash-command arguments:
 `$ARGUMENTS`

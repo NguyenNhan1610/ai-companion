@@ -6,7 +6,7 @@ allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 
 Run an adversarial AI review through the shared plugin runtime.
 Position it as a challenge review that questions the chosen implementation, design choices, tradeoffs, and assumptions.
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config. For adversarial review `--model claude:max` (Opus with 1M context) is the natural pairing; `claude:code` (Sonnet) is a cheaper alternative.
+The provider (Codex, Claude) is selected via `--model provider:model` or the default from config. For adversarial review `--model claude:max` (Opus with 1M context) is the natural pairing; `claude:code` (Sonnet) is a cheaper alternative.
 
 Raw slash-command arguments:
 `$ARGUMENTS`

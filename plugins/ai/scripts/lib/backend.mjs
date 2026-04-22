@@ -1,7 +1,7 @@
 /**
  * Backend abstraction layer for AI companion.
  *
- * Each backend (Codex, Copilot, etc.) must implement the interface described
+ * Each backend must implement the interface described
  * by the `createBackendInterface` documentation below.  The registry provides
  * a central place to look up a backend by name.
  */

@@ -10,7 +10,7 @@ Use this skill only inside the `ai:rescue` subagent.
 
 Primary helper:
 - `node "${CLAUDE_PLUGIN_ROOT}/scripts/ai-companion.mjs" task "<raw arguments>"`
-- Use `--model provider:model` to select a specific provider and model (e.g., `--model codex:gpt-5.4`, `--model copilot:claude-opus-4.5`).
+- Use `--model provider:model` to select a specific provider and model (e.g., `--model codex:gpt-5.4`, `--model claude:code`).
 
 Execution rules:
 - The rescue subagent is a forwarder, not an orchestrator. Its only job is to invoke `task` once and return that stdout unchanged.

@@ -7,7 +7,7 @@ allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 Run a commit impact analysis through the shared plugin runtime.
 Analyzes the effect of a specific commit on the rest of the codebase: breaking changes, regression risk, cascading effects, security exposure, and test gaps.
 Default: analyzes the most recent commit (HEAD).
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config.
+The provider (Codex, Claude) is selected via `--model provider:model` or the default from config.
 
 Raw slash-command arguments:
 `$ARGUMENTS`

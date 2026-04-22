@@ -1,12 +1,12 @@
 ---
 name: ai-plugin-usage
-description: Guide for using the AI Companion plugin commands in Claude Code. Use this skill whenever the user asks how to use the AI plugin, wants help with /ai:review, /ai:adversarial-review, /ai:council, /ai:debug, /ai:mermaid, /ai:rescue, /ai:status, /ai:result, /ai:cancel, or /ai:setup commands, asks about code review workflows, hypothesis debugging, multi-agent discussions, diagram rendering, task delegation to Codex/Copilot, background job management, plugin installation, configuration, or troubleshooting. Also trigger when the user mentions Codex integration, review gates, multi-agent review, council of agents, mermaid diagrams, or wants to understand what the AI plugin can do.
+description: Guide for using the AI Companion plugin commands in Claude Code. Use this skill whenever the user asks how to use the AI plugin, wants help with /ai:review, /ai:adversarial-review, /ai:council, /ai:debug, /ai:mermaid, /ai:rescue, /ai:status, /ai:result, /ai:cancel, or /ai:setup commands, asks about code review workflows, hypothesis debugging, multi-agent discussions, diagram rendering, task delegation to Codex, background job management, plugin installation, configuration, or troubleshooting. Also trigger when the user mentions Codex integration, review gates, multi-agent review, council of agents, mermaid diagrams, or wants to understand what the AI plugin can do.
 user-invocable: true
 ---
 
 # AI Companion Plugin Usage Guide
 
-Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agent discussions, hypothesis debugging, diagram rendering, and task delegation.
+Use Codex from inside Claude Code for code reviews, multi-agent discussions, hypothesis debugging, diagram rendering, and task delegation.
 
 ## When to Use Which Command
 
@@ -59,12 +59,12 @@ Load the relevant section based on what the user is asking about:
 
 ## Supported Backends
 
-| Feature | Codex (Default) | Copilot |
-|---------|-----------------|---------|
+| Feature | Codex (Default) | Claude |
+|---------|-----------------|--------|
 | Type | Persistent app server | Stateless CLI |
-| Native reviews | Yes | No (task-based) |
-| Auth | `~/.codex/config.toml` | GitHub Copilot CLI |
-| Models | gpt-5.4, gpt-5.4-mini, spark | Via Copilot CLI |
+| Native reviews | Yes | Yes |
+| Auth | `~/.codex/config.toml` | `~/.claude` |
+| Models | gpt-5.4, gpt-5.4-mini, spark | sonnet, opus, haiku |
 
 ## Troubleshooting
 

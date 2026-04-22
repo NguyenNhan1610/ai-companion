@@ -1,8 +1,8 @@
 /**
  * Claude backend implementation.
  *
- * Wraps the `claude` CLI (Claude Code). Stateless per-invocation, same shape
- * as the Copilot backend. Uses `claude -p --output-format json` internally.
+ * Wraps the `claude` CLI (Claude Code). Stateless per-invocation. Uses
+ * `claude -p --output-format json` internally.
  */
 
 import fs from "node:fs";

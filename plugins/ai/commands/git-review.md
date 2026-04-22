@@ -6,7 +6,7 @@ allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 
 Run a git diff review through the shared plugin runtime.
 Reviews uncommitted changes or branch diff. Uses native backend review when available for faster results.
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config.
+The provider (Codex, Claude) is selected via `--model provider:model` or the default from config.
 
 Raw slash-command arguments:
 `$ARGUMENTS`
