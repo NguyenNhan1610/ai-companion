@@ -233,105 +233,63 @@ function buildWorkflowBlock() {
   return `${WORKFLOW_BEGIN}
 # AI Companion workflow
 
-This project uses the AI Companion plugin for Claude Code. Planning documents live under \`.project/\`; runtime state lives under \`.claude/\`.
+Planning docs live under \`.project/\`, runtime state under \`.claude/\`. IDs use short prefixes (\`ADR\`, \`FDR\`, \`TP\`, \`IMPL\`, \`TODO\`, \`HANDOFF\`, \`TRACE\`, \`VAL\`).
 
-## Project structure
+## Directories
 
-- \`.project/architecture-decision-records/\` — \`ADR-{NN}-{slug}.md\` — architecture decisions with trade-offs and diagrams
-- \`.project/feature-development-records/\` — \`FDR-{NN}-{slug}.md\` — feature plans with edge cases, risks, impact analysis
-- \`.project/test-plans/\` — \`TP-{NN}-{slug}.md\` — test plans with FAC/AAC traceability
-- \`.project/implementation-plans/\` — \`IMPL-{NN}-{slug}.md\` — DAG task plans with EAC + critical path
-- \`.project/todo-lists/\` — \`TODO-{NN}-{slug}.yaml\` — task tracking with explicit DAG, priority, confidence, effort
-- \`.project/handoff-records/\` — \`HANDOFF-{NN}-{slug}.md\` — implementation records with traceability
-- \`.project/traceability-reports/\` — \`TRACE-{NN}-{slug}.md\` — ship-readiness verification
-- \`.project/validation-reports/\` — \`VAL-{NN}-{upstream}-to-{downstream}.md\` — pairwise structural checks
-- \`.project/knowledge-entries/\` — patterns, lessons, decisions, antipatterns
-- \`.project/scripts/hypothesis/\` — investigative scripts (\`H{NN}_{slug}.py\` + \`_result.json\`)
-- \`.project/cascades/\` — auto-generated change log (gitignored)
-- \`.claude/rules/\` — on-demand coding rules (install via \`/ai:setup --install-rules\`)
+- \`.project/{architecture-decision,feature-development,handoff}-records/\`, \`.project/{test,implementation}-plans/\`, \`.project/todo-lists/\`, \`.project/{traceability,validation}-reports/\`
+- \`.project/knowledge-entries/\` · \`.project/scripts/hypothesis/\` · \`.project/cascades/\` (gitignored raw change log)
+- \`.claude/rules/\` — coding rules installed per-engine via \`/ai:setup --install-rules\`
 
-## Planning document frontmatter
+## Frontmatter contract
 
-Every planning doc carries strict YAML frontmatter that relates it to upstream and downstream docs by **full relative path** (not bare IDs):
+Every planning doc declares relationships by **full relative path** and is validated by \`plugins/ai/scripts/lib/planning-docs.mjs\`:
 
 \`\`\`yaml
 ---
-id: FDR-03                                    # short-form, matches filename stem
-type: feature-development-record              # full form
+id: FDR-03
+type: feature-development-record
 slug: chat-ui-copilot
-title: Chat UI Copilot
-status: draft                                 # draft | active | superseded | deprecated
-upstream:
-  - .project/architecture-decision-records/ADR-02-session-caching.md
-downstream: []                                # patched automatically when downstream docs are created
+status: draft                           # draft | active | superseded | deprecated
+upstream: [.project/architecture-decision-records/ADR-02-session-caching.md]
+downstream: []                          # patched automatically downstream
 created: 2026-04-22
 updated: 2026-04-22
 ---
 \`\`\`
 
-When a generator writes a new doc, it also patches each upstream parent's \`downstream:\` list. Validation is enforced by \`plugins/ai/scripts/lib/planning-docs.mjs\`:
+Generators call \`node planning-docs.mjs sync <path>\` after Write to patch each parent's \`downstream:\` list, and \`validate <path>\` for schema + DAG checks.
 
-\`\`\`bash
-node plugins/ai/scripts/lib/planning-docs.mjs validate <path>   # schema + DAG check
-node plugins/ai/scripts/lib/planning-docs.mjs sync <path>       # patch upstream downstream: lists
-\`\`\`
+## Planning loop
 
-Short-form prefixes (IDs + filenames only): \`ADR\`, \`FDR\`, \`TP\`, \`IMPL\`, \`TODO\`, \`HANDOFF\`, \`TRACE\`, \`VAL\`.
-
-## TODO DAG
-
-Todo-lists are DAG-first YAML — the dependency graph sits above the task bodies so agents get the graph from the first read. Tasks carry \`priority\` (P0-P3), \`confidence\` (0..1), \`effort\` (XS..XL), \`acceptance_trace\`, and structured \`evidence\`. Edges are explicit with \`kind\` (\`hard\` | \`soft\` | \`data\`) and a required \`reason:\`.
-
-View the graph:
-
-\`\`\`bash
-/ai:task-graph                      # newest todo-list as ASCII tree (default)
-/ai:task-graph TODO-03              # specific todo-list
-/ai:task-graph TODO-03 --ready      # tasks ready to start (no unmet hard/data deps)
-/ai:task-graph TODO-03 --critical-path
-/ai:task-graph TODO-03 --format mermaid|json
-\`\`\`
-
-## Core planning loop
-
-| Step | Command | Writes |
+| # | Command | Output |
 |---|---|---|
-| 1 | \`/ai:architecture-decision-record\` | \`.project/architecture-decision-records/ADR-*.md\` |
-| 2 | \`/ai:feature-development-record\` | \`.project/feature-development-records/FDR-*.md\` |
-| 3 | \`/ai:test-plan\` (optional) | \`.project/test-plans/TP-*.md\` |
-| 4 | \`/ai:implement\` | \`.project/implementation-plans/IMPL-*.md\` |
-| 5 | \`/ai:todo\` | \`.project/todo-lists/TODO-*.yaml\` |
-| * | \`/ai:plan-feature\` | runs steps 2-5 in one pipeline (FDR → IMPL → TODO) |
+| 1 | \`/ai:architecture-decision-record\` | \`ADR-*.md\` |
+| 2 | \`/ai:feature-development-record\` | \`FDR-*.md\` |
+| 3 | \`/ai:test-plan\` (optional) | \`TP-*.md\` |
+| 4 | \`/ai:implement\` | \`IMPL-*.md\` |
+| 5 | \`/ai:todo\` | \`TODO-*.yaml\` (DAG-first: \`priority\`, \`confidence\`, \`effort\`, typed edges) |
+| * | \`/ai:plan-feature\` | runs 2–5 in one pipeline |
 
-Minimum viable chain: FDR → IMPL → TODO (lite mode — no ADR, no TP). Scope flags: \`--scope {backend|frontend|fullstack|api|data}[,lite]\`.
+Lite chain FDR → IMPL → TODO via \`--scope ...,lite\`. View the DAG with \`/ai:task-graph [TODO-NN] [--ready|--critical-path] [--format ascii|mermaid|json]\` (ASCII default).
 
-## Build / review / ship loop
+## Build · review · ship
 
-| Step | Command | Purpose |
+| # | Command | Purpose |
 |---|---|---|
-| 1 | Write code & tests | use \`.project/scripts/hypothesis/\` for investigative scripts |
-| 2 | \`/ai:lint\` | batch lint + typecheck recently changed files |
-| 3 | \`/ai:cascade\` | turn the raw change log into a \`HANDOFF-*.md\` with traceability |
-| 4 | \`/ai:review\` \| \`/ai:adversarial-review\` \| \`/ai:finding-review\` \| \`/ai:git-review\` \| \`/ai:git-effect-review\` \| \`/ai:council\` | AI code review |
-| 5 | \`/ai:validate <upstream> <downstream>\` | pairwise coverage check (ADR→FDR, FDR→IMPL, IMPL→TODO, …) |
-| 6 | \`/ai:trace --verify <seed>\` | walk the frontmatter graph end-to-end, flag gaps, ship/no-ship verdict |
+| 1 | \`/ai:lint\` | batch lint + typecheck changed files |
+| 2 | \`/ai:cascade\` | change log → \`HANDOFF-*.md\` with traceability |
+| 3 | \`/ai:review\` · \`/ai:adversarial-review\` · \`/ai:finding-review\` · \`/ai:git-review\` · \`/ai:git-effect-review\` · \`/ai:council\` | AI code review |
+| 4 | \`/ai:validate <upstream> <downstream>\` | pairwise coverage (e.g. FDR→IMPL) |
+| 5 | \`/ai:trace --verify <seed>\` | walk frontmatter graph end-to-end, ship/no-ship verdict |
 
-## Debug / delegate / capture
+Acceptance chain: \`AAC\` (ADR) → \`FAC\` (FDR) → \`TC\` (TP) → \`EAC\` (IMPL) → task \`acceptance_trace\` (TODO).
 
-- \`/ai:debug\` — hypothesis-based debugging with a visual decision tree.
-- \`/ai:rescue\` — delegate an open-ended task to a Codex subagent.
-- \`/ai:knowledge\` — extract / search / suggest reusable knowledge.
-- \`/ai:mermaid validate <diagram>\` — syntax check (rendering removed in 5.2).
-- \`/ai:status\` / \`/ai:result\` / \`/ai:cancel\` — manage background jobs.
-- \`/ai:setup\` — check backend readiness, init project, install rules (\`--engine claude|windsurf|codex|copilot|all\`), install statusline, enable review gate.
+## Support
 
-## Backends
+\`/ai:debug\` (hypothesis tree) · \`/ai:rescue\` (delegate to Codex) · \`/ai:knowledge\` · \`/ai:mermaid validate\` · \`/ai:status\` · \`/ai:result\` · \`/ai:cancel\` · \`/ai:setup\` (\`--install-rules [--engine claude|windsurf|codex|copilot|all]\`, \`--install-statusline\`, \`--enable-review-gate\`).
 
-Codex (default, \`--model codex:gpt-5.4\`) and Claude (\`--model claude:opus|max|code|fast\`) are supported. Configure the default in \`plugins/ai/config/defaults.json\` or per-invocation via \`--model provider:model\`.
-
-## Acceptance chain
-
-\`AAC\` (ADR) → \`FAC\` (FDR) → \`TC\` (TP) → \`EAC\` (IMPL) → task \`acceptance_trace\` (TODO). \`/ai:validate\` checks each hop; \`/ai:trace\` verifies the whole chain against code + tests.
+Backends: \`--model codex:gpt-5.4\` (default) or \`--model claude:opus|max|code|fast\`. Config in \`plugins/ai/config/defaults.json\`.
 ${WORKFLOW_END}
 `;
 }
