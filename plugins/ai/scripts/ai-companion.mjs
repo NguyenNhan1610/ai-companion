@@ -1405,7 +1405,7 @@ async function handleCouncil(argv, backend, resolvedModel = null) {
   );
 }
 
-async function handleTask(argv, backend, resolvedModel = null) {
+async function handleTask(argv, backend, resolvedModel = null, resolvedDefaultEffort = null) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["effort", "cwd", "prompt-file"],
     booleanOptions: ["json", "write", "resume-last", "resume", "fresh", "background"]
@@ -1414,7 +1414,7 @@ async function handleTask(argv, backend, resolvedModel = null) {
   const cwd = resolveCommandCwd(options);
   const workspaceRoot = resolveCommandWorkspace(options);
   const model = resolvedModel;
-  const effort = normalizeReasoningEffort(options.effort);
+  const effort = normalizeReasoningEffort(options.effort ?? resolvedDefaultEffort);
   const prompt = readTaskPrompt(cwd, options, positionals);
 
   const resumeLast = Boolean(options["resume-last"] || options.resume);
@@ -1692,8 +1692,8 @@ function resolveBackendFromArgs(rawArgv) {
   const modelArg = rawModel || rawModelShort || null;
 
   const config = loadPluginConfig();
-  const { provider, model } = resolveProviderAndModel(modelArg, config);
-  return { provider, model, argv: finalArgv };
+  const { provider, model, defaultEffort } = resolveProviderAndModel(modelArg, config);
+  return { provider, model, defaultEffort, argv: finalArgv };
 }
 
 async function main() {
@@ -1703,7 +1703,7 @@ async function main() {
     return;
   }
 
-  const { provider, model: resolvedModel, argv } = resolveBackendFromArgs(rawArgv);
+  const { provider, model: resolvedModel, defaultEffort: resolvedDefaultEffort, argv } = resolveBackendFromArgs(rawArgv);
   const backend = getBackend(provider);
 
   switch (subcommand) {
@@ -1731,7 +1731,7 @@ async function main() {
       await handleCouncil(argv, backend, resolvedModel);
       break;
     case "task":
-      await handleTask(argv, backend, resolvedModel);
+      await handleTask(argv, backend, resolvedModel, resolvedDefaultEffort);
       break;
     case "task-worker":
       await handleTaskWorker(argv, backend);

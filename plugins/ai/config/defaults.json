@@ -2,21 +2,22 @@
   "defaultProvider": "codex",
   "providers": {
     "codex": {
-      "defaultModel": null,
+      "defaultModel": "gpt-5.4",
+      "defaultEffort": "xhigh",
       "aliases": {
         "spark": "gpt-5.3-codex-spark"
       }
     },
     "claude": {
-      "defaultModel": "claude-sonnet-4-6",
+      "defaultModel": "claude-opus-4-7",
       "aliases": {
         "fast": "claude-haiku-4-5-20251001",
         "haiku": "claude-haiku-4-5-20251001",
         "code": "claude-sonnet-4-6",
-        "default": "claude-sonnet-4-6",
+        "default": "claude-opus-4-7",
         "sonnet": "claude-sonnet-4-6",
-        "max": "claude-opus-4-6[1m]",
-        "opus": "claude-opus-4-6[1m]"
+        "max": "claude-opus-4-7[1m]",
+        "opus": "claude-opus-4-7"
       }
     }
   }

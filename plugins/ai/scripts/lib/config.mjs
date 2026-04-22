@@ -28,9 +28,11 @@ export function loadPluginConfig() {
  */
 export function resolveProviderAndModel(rawModel, config) {
   if (!rawModel || !String(rawModel).trim()) {
+    const dp = config.defaultProvider;
     return {
-      provider: config.defaultProvider,
-      model: config.providers?.[config.defaultProvider]?.defaultModel ?? null
+      provider: dp,
+      model: config.providers?.[dp]?.defaultModel ?? null,
+      defaultEffort: config.providers?.[dp]?.defaultEffort ?? null
     };
   }
 
@@ -57,5 +59,9 @@ export function resolveProviderAndModel(rawModel, config) {
     model = providerConfig.aliases[model];
   }
 
-  return { provider, model: model || null };
+  return {
+    provider,
+    model: model || null,
+    defaultEffort: providerConfig?.defaultEffort ?? null
+  };
 }
