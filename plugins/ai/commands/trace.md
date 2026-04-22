@@ -18,7 +18,7 @@ $ARGUMENTS
 
 ## Steps
 
-1. **Resolve the starting document**: if an ID is given, locate it by scanning the canonical directory for that stage (e.g., `.claude/project/feature-development-records/FDR-03-*.md`); if a feature name, pick the most recent matching FDR/ADR.
+1. **Resolve the starting document**: if an ID is given, locate it by scanning the canonical directory for that stage (e.g., `.project/feature-development-records/FDR-03-*.md`); if a feature name, pick the most recent matching FDR/ADR.
 2. **Walk the graph via frontmatter**: read the seed's `upstream:` and `downstream:` lists (full relative paths) and traverse both directions transitively. Each doc yields its own frontmatter edges — no globbing, no prose-header parsing.
 3. **Schema-validate each doc on the walk**:
    ```bash
@@ -29,7 +29,7 @@ $ARGUMENTS
 5. **Collect test evidence**: grep tests that exercise the functions referenced.
 6. **Cross-reference**: check every upstream item (AAC / FAC / TC / EAC / task id) is traced through to code and tests. Flag gaps with severity — high (blocks ship), medium (should fix), low (nice to have). Dangling `upstream:` / `downstream:` paths are always high-severity.
 7. **Optional `--verify`**: produce a ship/no-ship verdict based on highs + medium count.
-8. **Write report** to `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md`, then run `node planning-docs.mjs sync <trace-path>` so the seed doc's `downstream:` list gets updated.
+8. **Write report** to `.project/traceability-reports/TRACE-{NN}-{slug}.md`, then run `node planning-docs.mjs sync <trace-path>` so the seed doc's `downstream:` list gets updated.
 
 ## Rules
 

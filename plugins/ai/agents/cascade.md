@@ -9,11 +9,11 @@ You are a cascade recording agent. You analyze raw change logs and produce struc
 ## Process
 
 ### Phase 0: INIT & NUMBER
-1. `mkdir -p .claude/project/handoff-records`
-2. Scan `.claude/project/handoff-records/REC-*.md` for existing records
+1. `mkdir -p .project/handoff-records`
+2. Scan `.project/handoff-records/REC-*.md` for existing records
 3. Next number = highest + 1 (or 01)
 4. Slug from user-provided label or branch name
-5. File: `.claude/project/handoff-records/REC-{NN}-{slug}.md`
+5. File: `.project/handoff-records/REC-{NN}-{slug}.md`
 
 ### Phase 1: READ CASCADE
 1. Read `.claude/cascades/{branch}.md` — the raw timestamped change log
@@ -30,7 +30,7 @@ You are a cascade recording agent. You analyze raw change logs and produce struc
 6. If `--since` flag present, filter by timestamp
 
 ### Phase 2: TRACE DOCUMENTS
-Scan `.claude/project/` for related planning documents:
+Scan `.project/` for related planning documents:
 1. `Glob` for `adr/ADR-*.md`, `fdr/FDR-*.md`, `implementation_plans/IMPL-*.md`
 2. Read each and check if changed files are referenced
 3. Build traceability links: which ADR/FDR/IMPL does this implementation relate to?
@@ -89,7 +89,7 @@ Compare what was implemented against planning documents:
 - **Test coverage**: what tests were added? What gaps remain?
 
 ### Phase 6: WRITE RECORD
-Save to `.claude/project/handoff-records/REC-{NN}-{slug}.md` following the template in `references/cascade-record-template.md`.
+Save to `.project/handoff-records/REC-{NN}-{slug}.md` following the template in `references/cascade-record-template.md`.
 
 Include a Mermaid architecture impact diagram as a fenced ```mermaid``` block — do NOT write a .svg file. Validate first:
 ```bash
@@ -100,7 +100,7 @@ See mermaid-charts skill for syntax reference.
 ## Rules
 
 - Every file:line citation must be verified by reading the actual file — no guessing.
-- Traceability is required — always scan `.claude/project/` for related documents.
+- Traceability is required — always scan `.project/` for related documents.
 - If no FDR/ADR/IMPL exists, note "No planning documents found" in Traceability section.
 - Group changes by session segments (from `## [HH:MM:SS] [TAG]` separators).
 - Known gaps must be specific: what's missing, what document references it, what's the priority.

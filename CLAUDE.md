@@ -1,22 +1,22 @@
 
 ## AI Companion Project Structure
 
-- `.claude/project/architecture-decision-records/` — Architecture Decision Records (`ADR-{NN}-{slug}.md`)
-- `.claude/project/feature-development-records/` — Feature Development Records (`FDR-{NN}-{slug}.md`)
-- `.claude/project/test-plans/` — Test Plans with traceability matrices (`TP-{NN}-{slug}.md`)
-- `.claude/project/implementation-plans/` — DAG task plans (`IMPL-{NN}-{slug}.md`)
-- `.claude/project/handoff-records/` — Implementation records with traceability (`HANDOFF-{NN}-{slug}.md`)
-- `.claude/project/validation-reports/` — Pairwise validation reports (`VAL-{NN}-{upstream}-to-{downstream}.md`)
-- `.claude/project/traceability-reports/` — Traceability reports with coverage verification (`TRACE-{NN}-{slug}.md`)
-- `.claude/project/knowledge-entries/` — Reusable knowledge: patterns, lessons, decisions, antipatterns
-- `.claude/project/todo-lists/` — Task tracking with DAG, priority, confidence, effort (`TODO-{NN}-{slug}.yaml`)
-- `.claude/project/scripts/hypothesis/` — Hypothesis test scripts (`H{NN}_{slug}.py` + `_result.json`)
+- `.project/architecture-decision-records/` — Architecture Decision Records (`ADR-{NN}-{slug}.md`)
+- `.project/feature-development-records/` — Feature Development Records (`FDR-{NN}-{slug}.md`)
+- `.project/test-plans/` — Test Plans with traceability matrices (`TP-{NN}-{slug}.md`)
+- `.project/implementation-plans/` — DAG task plans (`IMPL-{NN}-{slug}.md`)
+- `.project/handoff-records/` — Implementation records with traceability (`HANDOFF-{NN}-{slug}.md`)
+- `.project/validation-reports/` — Pairwise validation reports (`VAL-{NN}-{upstream}-to-{downstream}.md`)
+- `.project/traceability-reports/` — Traceability reports with coverage verification (`TRACE-{NN}-{slug}.md`)
+- `.project/knowledge-entries/` — Reusable knowledge: patterns, lessons, decisions, antipatterns
+- `.project/todo-lists/` — Task tracking with DAG, priority, confidence, effort (`TODO-{NN}-{slug}.yaml`)
+- `.project/scripts/hypothesis/` — Hypothesis test scripts (`H{NN}_{slug}.py` + `_result.json`)
 - `.claude/cascades/` — Auto-generated change log (timestamps + file:line, gitignored)
 - `.claude/rules/` — On-demand coding rules by stack (install via `/ai:setup --install-rules`)
 
 ## Planning document frontmatter
 
-Every planning doc in `.claude/project/` (except knowledge entries) declares its relationships in strict YAML frontmatter:
+Every planning doc in `.project/` (except knowledge entries) declares its relationships in strict YAML frontmatter:
 
 ```yaml
 id: FDR-03                             # short-form, matches filename stem
@@ -25,7 +25,7 @@ slug: chat-ui-copilot-experience
 title: Chat UI Copilot Experience
 status: draft                          # draft | active | superseded | deprecated
 upstream:
-  - .claude/project/architecture-decision-records/ADR-02-session-caching.md
+  - .project/architecture-decision-records/ADR-02-session-caching.md
 downstream: []                         # patched automatically when downstream docs are created
 created: 2026-04-22
 updated: 2026-04-22

@@ -16,7 +16,7 @@ The implement agent:
 3. Builds a DAG (Directed Acyclic Graph) of implementation tasks with dependencies
 4. Generates a structured checklist with parallel tracks and critical path
 5. Embeds the DAG as a validated fenced ```mermaid``` block in the IMPL markdown (no .svg file is written)
-6. Saves to `.claude/project/implementation-plans/IMPL-{NN}-{slug}.md`
+6. Saves to `.project/implementation-plans/IMPL-{NN}-{slug}.md`
 
 Execution mode:
 - Default to foreground.

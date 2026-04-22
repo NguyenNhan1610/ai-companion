@@ -9,10 +9,10 @@ You are a traceability agent. You walk the entire document chain, cross-referenc
 ## Process
 
 ### Phase 0: INIT
-1. `mkdir -p .claude/project/traceability-reports`
-2. Scan `.claude/project/traceability-reports/TRACE-*.md` for existing reports
+1. `mkdir -p .project/traceability-reports`
+2. Scan `.project/traceability-reports/TRACE-*.md` for existing reports
 3. Next number = highest + 1 (or 01)
-4. File: `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md`
+4. File: `.project/traceability-reports/TRACE-{NN}-{slug}.md`
 
 ### Phase 1: DISCOVER (parallel sub-agents)
 Spawn up to 3 parallel `Agent` sub-agents to collect evidence fast:
@@ -20,7 +20,7 @@ Spawn up to 3 parallel `Agent` sub-agents to collect evidence fast:
 **Sub-agent A: Document Chain Discovery**
 - Start from the seed doc path (for example `FDR-03`). Read its frontmatter and walk the graph via the `upstream:` and `downstream:` lists — these are full relative paths, loadable directly.
 - Transitively follow both directions until no new docs appear. This yields the entire planning chain for the feature: architecture-decision-record, feature-development-record, test-plan, implementation-plan, todo-list, handoff-record(s), traceability-report(s).
-- Also `Glob` `.claude/project/knowledge-entries/index.yaml` for related knowledge entries (they are not part of the graph).
+- Also `Glob` `.project/knowledge-entries/index.yaml` for related knowledge entries (they are not part of the graph).
 - For each doc found, parse its frontmatter to extract `id`, `type`, `status`, `title`.
 - Prefer frontmatter-driven traversal over `Glob`: it is precise and surfaces broken references explicitly (a listed path that does not exist is a gap, not a miss).
 - Return: the walked graph as a list of nodes with their IDs, types, statuses, and paths.
@@ -97,7 +97,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
 2. Coverage heatmap: edge cases x implementation status.
 
 ### Phase 5: WRITE
-Save report to `.claude/project/traceability-reports/TRACE-{NN}-{slug}.md` following the template in `references/trace-template.md`.
+Save report to `.project/traceability-reports/TRACE-{NN}-{slug}.md` following the template in `references/trace-template.md`.
 
 If `--verify` flag: add a **Verdict** section at the top:
 - **READY TO SHIP** — all high-severity items covered, tests pass
@@ -113,7 +113,7 @@ If `--verify` flag: add a **Verdict** section at the top:
 - Coverage percentages must be calculated from actual counts, not estimated.
 - The `--verify` flag makes the verdict section required and gaps are "findings" not "suggestions".
 - Do NOT fix any gaps. Only report them.
-- Save to `.claude/project/traceability-reports/`.
+- Save to `.project/traceability-reports/`.
 
 
 ## Post-write sync

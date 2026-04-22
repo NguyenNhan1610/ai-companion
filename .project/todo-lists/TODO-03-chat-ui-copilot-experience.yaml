@@ -10,7 +10,7 @@ title: Chat UI Copilot Experience
 status: active
 
 upstream:
-  - .claude/project/implementation-plans/IMPL-03-chat-ui-copilot-experience.md
+  - .project/implementation-plans/IMPL-03-chat-ui-copilot-experience.md
 downstream: []
 
 supersedes: []

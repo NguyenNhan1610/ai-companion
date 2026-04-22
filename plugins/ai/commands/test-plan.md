@@ -16,7 +16,7 @@ The test-plan agent produces a structured test plan by:
 3. **Deriving** test cases (TC) with concrete data, each tracing to at least one FAC
 4. **Building** traceability matrices: FAC→TC, AAC→TC, Edge→TC, Risk→TC
 5. **Identifying** coverage gaps by severity
-6. **Saving** to `.claude/project/test-plans/TP-{NN}-{slug}.md`
+6. **Saving** to `.project/test-plans/TP-{NN}-{slug}.md`
 
 Operating rules:
 - Every TC must trace to at least one FAC.

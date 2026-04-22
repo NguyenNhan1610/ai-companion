@@ -22,7 +22,7 @@ $ARGUMENTS
 
 ## File format
 
-- Path: `.claude/project/todo-lists/TODO-{NN}-{slug}.yaml`
+- Path: `.project/todo-lists/TODO-{NN}-{slug}.yaml`
 - Schema: DAG-first (header → `dependencies:` → `computed:` → `tasks:`). See `plugins/ai/skills/todo-tracking/references/todo-schema.yaml`.
 - Task fields: `id` (kebab `task-NN`), `title`, `status`, `priority` (P0-P3), `confidence` (0..1), `effort` (XS/S/M/L/XL), `acceptance_trace` (list of EAC/FAC/AAC ids), `evidence` (list of `{file, line?, kind}`), `ticket`, `assigned_to`, `notes`.
 - Dependencies: explicit `dependencies:` list with `from`, `to`, `kind` (`hard` | `soft` | `data`), `reason`.

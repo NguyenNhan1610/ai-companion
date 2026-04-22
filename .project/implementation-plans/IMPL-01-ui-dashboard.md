@@ -10,7 +10,7 @@ A local web dashboard shipped with the AI Companion plugin that provides:
 
 1. **Chat-style session feed** — real-time rendering of all Claude Code hook events (tool calls, diffs, bash output, agent lifecycle, user prompts) as typed widgets
 
-2. **BlockNote project editor** — rich editor for `.claude/project/` documents (ADR, FDR, IMPL, TODO, cascades, knowledge)
+2. **BlockNote project editor** — rich editor for `.project/` documents (ADR, FDR, IMPL, TODO, cascades, knowledge)
 
 3. **Embedded terminal** — xterm.js PTY in the same project directory
 
@@ -784,7 +784,7 @@ Logic to reduce visual noise:
 
 ## Phase 3: BlockNote Project Editor
 
-**Goal:** Rich document editor for `.claude/project/` files using BlockNote. File tree navigation, markdown round-trip, custom blocks for YAML frontmatter and Mermaid.
+**Goal:** Rich document editor for `.project/` files using BlockNote. File tree navigation, markdown round-trip, custom blocks for YAML frontmatter and Mermaid.
 
 **Depends on:** Phase 1 (server file routes), Phase 2 (layout shell)
 
@@ -792,7 +792,7 @@ Logic to reduce visual noise:
 
 **Create** `plugins/ai/ui/server/routes/files.ts`
 
-Scoped to `{projectRoot}/.claude/project/` only — reject any path traversal.
+Scoped to `{projectRoot}/.project/` only — reject any path traversal.
 
 * `GET /api/files/tree` → recursive directory listing as JSON tree
 
@@ -815,7 +815,7 @@ Scoped to `{projectRoot}/.claude/project/` only — reject any path traversal.
 
 Security:
 
-* Resolve all paths, verify they're under `.claude/project/`
+* Resolve all paths, verify they're under `.project/`
 
 * Reject paths containing `..`, symlinks outside scope
 
@@ -823,7 +823,7 @@ Security:
 
 **Create** `plugins/ai/ui/server/lib/file-watcher.ts`
 
-* `fs.watch` on `.claude/project/` recursively
+* `fs.watch` on `.project/` recursively
 
 * Emit `file_changed` events to EventBus (for editor refresh)
 
@@ -999,7 +999,7 @@ Security:
 
 ### Phase 3 Verification
 
-1. File tree shows all `.claude/project/` directories
+1. File tree shows all `.project/` directories
 
 2. Click ADR file → opens in BlockNote with formatted content
 

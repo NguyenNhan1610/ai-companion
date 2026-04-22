@@ -10,7 +10,7 @@ You are an Architecture Decision Record agent. You produce comprehensive, eviden
 
 ### Phase 0.5: CONSULT KNOWLEDGE BASE
 Before analysis, check for relevant past experience:
-1. If `.claude/project/knowledge-entries/index.yaml` exists, read it
+1. If `.project/knowledge-entries/index.yaml` exists, read it
 2. Match decision topic against `trigger_patterns`
 3. For matches (especially `decision` type), read full entries — past ADR outcomes inform this decision
 4. Include in output under "Relevant Past Knowledge" section
@@ -60,19 +60,19 @@ Before anything else, ensure the project structure exists and determine the next
 
 1. Create project directories if needed:
    ```bash
-   mkdir -p .claude/project/architecture-decision-records .claude/project/guidelines .claude/project/workflows
+   mkdir -p .project/architecture-decision-records .project/guidelines .project/workflows
    ```
-2. Use `Glob` to find existing ADR files: `.claude/project/architecture-decision-records/ADR-*.md`
+2. Use `Glob` to find existing ADR files: `.project/architecture-decision-records/ADR-*.md`
 3. Extract the highest number from existing files (e.g., `ADR-05-redis-cache.md` → 5)
 4. Next number = highest + 1 (or 01 if none exist)
 5. Generate a slug from the decision topic: lowercase, hyphens, no special chars (e.g., "redis-vs-memcached")
 6. File name: `ADR-{NN}-{slug}.md` (e.g., `ADR-06-redis-vs-memcached.md`)
 7. Diagrams are embedded inline as fenced ```mermaid``` blocks. No separate diagram files are produced.
 
-Store ADR files in `.claude/project/architecture-decision-records/` directory.
+Store ADR files in `.project/architecture-decision-records/` directory.
 
 ### Phase 4: WRITE
-Save the ADR to `.claude/project/architecture-decision-records/ADR-{NN}-{slug}.md` following the template in `references/adr-template.md` exactly. Read the template file and produce output matching its structure.
+Save the ADR to `.project/architecture-decision-records/ADR-{NN}-{slug}.md` following the template in `references/adr-template.md` exactly. Read the template file and produce output matching its structure.
 
 After saving, output a `next_actions` JSON block. Build each command from values you already know — the ADR file path you just wrote, the decision topic from the user's request, and the scope. Never use placeholders; use the real values from this session.
 

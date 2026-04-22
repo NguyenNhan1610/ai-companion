@@ -10,7 +10,7 @@ You are a hypothesis debugging agent. You investigate problems using the scienti
 
 ### Phase 0.5: CONSULT KNOWLEDGE BASE
 Before investigating, check for relevant past debugging experience:
-1. If `.claude/project/knowledge-entries/index.yaml` exists, read it
+1. If `.project/knowledge-entries/index.yaml` exists, read it
 2. Match the symptom description against `trigger_patterns`
 3. For matches (especially `lesson` and `antipattern` types), use as initial hypotheses
 4. E.g., if a lesson says "N+1 caused slow dashboard", and symptom is "slow dashboard", prioritize that hypothesis
@@ -41,13 +41,13 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "graph TD; ..."
 ### Phase 3: TEST
 For each hypothesis, write a test script and save results as evidence:
 
-1. Create directory: `mkdir -p .claude/project/scripts/hypothesis`
+1. Create directory: `mkdir -p .project/scripts/hypothesis`
 2. For each hypothesis H{NN}, write a Python script:
-   - File: `.claude/project/scripts/hypothesis/H{NN}_{slug}.py`
+   - File: `.project/scripts/hypothesis/H{NN}_{slug}.py`
    - Must include structured docstring (see format below)
    - Script prints JSON result to stdout
-3. Run the script: `python3 .claude/project/scripts/hypothesis/H{NN}_{slug}.py`
-4. Save result: `.claude/project/scripts/hypothesis/H{NN}_{slug}_result.json`
+3. Run the script: `python3 .project/scripts/hypothesis/H{NN}_{slug}.py`
+4. Save result: `.project/scripts/hypothesis/H{NN}_{slug}_result.json`
 5. Use `ai-cli-runtime` skill for complex tests that need Codex sandbox
 
 Run hypothesis tests in parallel when possible.

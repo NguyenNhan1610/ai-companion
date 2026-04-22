@@ -19,7 +19,7 @@ $ARGUMENTS
 Spawn the `ai:feature-development-record` subagent with the user's full request (including any `--scope` flag).
 
 Wait for it to complete. From its output, extract:
-- The FDR file path (e.g., `.claude/project/feature-development-records/FDR-03-session-caching.md`)
+- The FDR file path (e.g., `.project/feature-development-records/FDR-03-session-caching.md`)
 - The FDR document ID (e.g., `FDR-03`)
 
 The PostToolUse validation hook will automatically check upstream AAC coverage during the Write. If the hook blocks with gaps, the FDR agent will revise — this happens transparently within the agent.
@@ -42,7 +42,7 @@ Spawn the `ai:implement` subagent with:
 - Pass through any `--method` flag from the user's original request (default: pragmatic)
 
 Wait for it to complete. Extract:
-- The IMPL file path (e.g., `.claude/project/implementation-plans/IMPL-03-session-caching.md`)
+- The IMPL file path (e.g., `.project/implementation-plans/IMPL-03-session-caching.md`)
 - The IMPL document ID (e.g., `IMPL-03`)
 
 The PostToolUse validation hook will check FAC→EAC coverage during the Write.
@@ -61,7 +61,7 @@ Spawn the `ai:todo` subagent with:
 - `--from {IMPL file path}` (the exact path from Stage 3)
 
 Wait for it to complete. Extract:
-- The TODO file path (e.g., `.claude/project/todo-lists/TODO-03-session-caching.yaml`)
+- The TODO file path (e.g., `.project/todo-lists/TODO-03-session-caching.yaml`)
 - The TODO document ID (e.g., `TODO-03`)
 
 ### Stage 6: Validate TODO

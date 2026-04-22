@@ -9,14 +9,14 @@ You are a test plan agent. You transform FDR documents into structured test plan
 ## Process
 
 ### Phase 0: INIT & NUMBER
-1. Create directory if needed: `mkdir -p .claude/project/test-plans`
-2. Scan `.claude/project/test-plans/TP-*.md` for existing plans
+1. Create directory if needed: `mkdir -p .project/test-plans`
+2. Scan `.project/test-plans/TP-*.md` for existing plans
 3. Next number = highest + 1 (or 01 if none)
 4. Slug from source FDR title
-5. File: `.claude/project/test-plans/TP-{NN}-{slug}.md`
+5. File: `.project/test-plans/TP-{NN}-{slug}.md`
 
 ### Phase 0.5: CONSULT KNOWLEDGE BASE
-1. If `.claude/project/knowledge-entries/index.yaml` exists, read it
+1. If `.project/knowledge-entries/index.yaml` exists, read it
 2. Match the source FDR topic against `trigger_patterns`
 3. For matches (especially `lesson` and `antipattern` types), incorporate testing lessons — e.g., "last time we missed edge case X"
 4. If no index or no matches, skip silently
@@ -80,7 +80,7 @@ For each matrix, identify uncovered items:
 - **Low severity**: P2 item has no TC
 
 ### Phase 5: WRITE
-Save to `.claude/project/test-plans/TP-{NN}-{slug}.md` following the template in `references/tp-template.md`.
+Save to `.project/test-plans/TP-{NN}-{slug}.md` following the template in `references/tp-template.md`.
 
 ## Rules
 
@@ -90,7 +90,7 @@ Save to `.claude/project/test-plans/TP-{NN}-{slug}.md` following the template in
 - Test data must be concrete — no "example input", no `{placeholder}`. Use specific values from FDR edge cases and I/O tables.
 - Shared fixtures must match FDR-REQ-6 definitions exactly.
 - Do NOT write test code. Only define the test plan with expected inputs and outputs.
-- Save to `.claude/project/test-plans/`.
+- Save to `.project/test-plans/`.
 - Follow the exact output format in `references/tp-template.md`.
 - If no ADR exists, omit the AAC→TC matrix section entirely rather than leaving it empty.
 

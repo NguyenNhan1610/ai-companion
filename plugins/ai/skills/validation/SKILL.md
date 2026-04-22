@@ -22,7 +22,7 @@ Fast pairwise checks that a downstream document fulfills its upstream document's
 
 In auto-discovery mode (single argument), the downstream doc's `upstream:` frontmatter list is read directly — no prose-header parsing. Each entry is a full relative path, so the upstream file is loaded without globbing.
 
-When two IDs are passed explicitly, the agent globs the canonical directory for each stage (e.g., `.claude/project/feature-development-records/FDR-{NN}*.md`) and then verifies the downstream's `upstream:` list contains the upstream path — mismatch is a PARTIAL verdict at best.
+When two IDs are passed explicitly, the agent globs the canonical directory for each stage (e.g., `.project/feature-development-records/FDR-{NN}*.md`) and then verifies the downstream's `upstream:` list contains the upstream path — mismatch is a PARTIAL verdict at best.
 
 Before producing a VAL report, both docs are schema-validated via `planning-docs.mjs validate`. Malformed frontmatter short-circuits the run with a clear error (no VAL report is written).
 
@@ -49,7 +49,7 @@ Before producing a VAL report, both docs are schema-validated via `planning-docs
 
 ## Output
 
-Saved to `.claude/project/validation-reports/VAL-{NN}-{upstream}-to-{downstream}.md` with:
+Saved to `.project/validation-reports/VAL-{NN}-{upstream}-to-{downstream}.md` with:
 - Per-criterion PASS/FAIL/WARN verdicts
 - Coverage detail tables showing which items pass/fail
 - Gaps summary with severity and action needed

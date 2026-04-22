@@ -11,12 +11,12 @@ You are a Feature Development Record agent. You produce comprehensive, evidence-
 ### Phase 0: INIT & NUMBER
 1. Create directories if needed:
    ```bash
-   mkdir -p .claude/project/feature-development-records
+   mkdir -p .project/feature-development-records
    ```
-2. Use `Glob` to find existing FDR files: `.claude/project/feature-development-records/FDR-*.md`
+2. Use `Glob` to find existing FDR files: `.project/feature-development-records/FDR-*.md`
 3. Extract the highest number, next = highest + 1 (or 01 if none)
 4. Generate slug from feature topic: lowercase, hyphens (e.g., "multi-tenant-caching")
-5. File: `.claude/project/feature-development-records/FDR-{NN}-{slug}.md`
+5. File: `.project/feature-development-records/FDR-{NN}-{slug}.md`
 6. Diagrams are embedded as fenced ```mermaid``` blocks inside the FDR markdown — no separate SVG files.
 7. Parse the `--scope` flag. It is a comma-separated list with two dimensions:
    - **Feature scope**: `backend` (default), `frontend`, `fullstack`, `api`, `data`
@@ -31,7 +31,7 @@ You are a Feature Development Record agent. You produce comprehensive, evidence-
 
 ### Phase 0.5: CONSULT KNOWLEDGE BASE
 Before analysis, check for relevant past experience:
-1. If `.claude/project/knowledge-entries/index.yaml` exists, read it
+1. If `.project/knowledge-entries/index.yaml` exists, read it
 2. Match feature description against `trigger_patterns`
 3. For matches, read full entries — extract solutions, pitfalls, edge cases
 4. Include in output under "Relevant Past Knowledge" section
@@ -147,7 +147,7 @@ Create the implementation and rollout plan.
 Produce a Mermaid gantt chart of the implementation timeline.
 
 ### Phase 6: WRITE
-Save the FDR to `.claude/project/feature-development-records/FDR-{NN}-{slug}.md` following the template in `references/fdr-template.md`.
+Save the FDR to `.project/feature-development-records/FDR-{NN}-{slug}.md` following the template in `references/fdr-template.md`.
 
 The FDR output follows `references/fdr-template.md` as the core structure. Insert sections from loaded fragments at marked positions:
 - **Flow fragment** (`flow-full.md` or `flow-lite.md`): determines header field values, FAC `traces_to_aac` content, and whether Lite Invariants subsection appears after the FAC table
@@ -180,7 +180,7 @@ Embed each diagram as a fenced ```mermaid``` block directly in the FDR markdown.
 - Risk assessments must have reasoning, not just High/Medium/Low labels.
 - Always include at least 4 Mermaid diagrams (dependency graph, data flow, risk matrix, timeline) as fenced ```mermaid``` blocks — no .svg files.
 - Do NOT implement the feature. Only document the plan.
-- Save the FDR file to `.claude/project/feature-development-records/`.
+- Save the FDR file to `.project/feature-development-records/`.
 - Follow the exact output format in `references/fdr-template.md`.
 
 ## Mermaid Validation

@@ -5,7 +5,7 @@ slug: {kebab-slug}
 title: {Feature/Decision Title}
 status: active                                  # draft | active | superseded | deprecated
 upstream:                                       # the seed doc(s) this trace walks
-  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
+  - .project/feature-development-records/FDR-{NN}-{slug}.md
 downstream: []
 supersedes: []
 superseded_by: null

@@ -5,7 +5,7 @@ slug: {kebab-slug}
 title: {Feature Title} Test Plan
 status: draft                                   # draft | active | superseded | deprecated
 upstream:
-  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
+  - .project/feature-development-records/FDR-{NN}-{slug}.md
 downstream: []                                  # patched by IMPL generator
 supersedes: []
 superseded_by: null

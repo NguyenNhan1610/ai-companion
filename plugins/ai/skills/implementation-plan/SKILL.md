@@ -11,12 +11,12 @@ Transform FDR/ADR documents into DAG-based task plans with dependencies, paralle
 ## Command
 
 ```bash
-/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md
-/ai:implement --from .claude/project/architecture-decision-records/ADR-05-redis.md
-/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md --method tdd
-/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md --method agile
-/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md --tp .claude/project/test-plans/TP-03-session-caching.md
-/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md --lite
+/ai:implement --from .project/feature-development-records/FDR-03-session-caching.md
+/ai:implement --from .project/architecture-decision-records/ADR-05-redis.md
+/ai:implement --from .project/feature-development-records/FDR-03-session-caching.md --method tdd
+/ai:implement --from .project/feature-development-records/FDR-03-session-caching.md --method agile
+/ai:implement --from .project/feature-development-records/FDR-03-session-caching.md --tp .project/test-plans/TP-03-session-caching.md
+/ai:implement --from .project/feature-development-records/FDR-03-session-caching.md --lite
 ```
 
 ## Flow Modes
@@ -39,7 +39,7 @@ Transform FDR/ADR documents into DAG-based task plans with dependencies, paralle
 
 ## Output
 
-Saved to `.claude/project/implementation-plans/IMPL-{NN}-{slug}.md` with:
+Saved to `.project/implementation-plans/IMPL-{NN}-{slug}.md` with:
 - **Engineering Acceptance Criteria (EAC)** table tracing to FAC and TC
 - **Per-task acceptance criteria**, function refs, and behavior row refs
 - **Source TP cross-reference** (when TP exists); **Inline Test Cases** (when no TP)

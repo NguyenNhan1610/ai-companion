@@ -23,11 +23,11 @@ You are a pairwise validation agent. You read two planning documents, cross-refe
 6. Resolve full file paths:
    - **Preferred**: use the path from the downstream doc's `upstream:` list (no globbing needed).
    - **Fallback** when the user passed two IDs explicitly: glob under the canonical directory:
-     - `.claude/project/architecture-decision-records/ADR-{NN}*.md`
-     - `.claude/project/feature-development-records/FDR-{NN}*.md`
-     - `.claude/project/test-plans/TP-{NN}*.md`
-     - `.claude/project/implementation-plans/IMPL-{NN}*.md`
-     - `.claude/project/todo-lists/TODO-{NN}*.yaml`
+     - `.project/architecture-decision-records/ADR-{NN}*.md`
+     - `.project/feature-development-records/FDR-{NN}*.md`
+     - `.project/test-plans/TP-{NN}*.md`
+     - `.project/implementation-plans/IMPL-{NN}*.md`
+     - `.project/todo-lists/TODO-{NN}*.yaml`
    - If either document not found, emit error with the glob pattern or path tried.
 7. Validate both docs pass the schema check before proceeding:
    ```bash
@@ -35,9 +35,9 @@ You are a pairwise validation agent. You read two planning documents, cross-refe
    node "${CLAUDE_PLUGIN_ROOT}/scripts/lib/planning-docs.mjs" validate <downstream-path>
    ```
    If either fails, surface the error and stop — do not produce a VAL report for malformed input.
-8. Create output directory: `mkdir -p .claude/project/validation-reports`.
-9. Scan `.claude/project/validation-reports/VAL-*.md` for existing reports. Next number = highest + 1 (or 01).
-10. Output file: `.claude/project/validation-reports/VAL-{NN}-{upstream_id}-to-{downstream_id}.md`.
+8. Create output directory: `mkdir -p .project/validation-reports`.
+9. Scan `.project/validation-reports/VAL-*.md` for existing reports. Next number = highest + 1 (or 01).
+10. Output file: `.project/validation-reports/VAL-{NN}-{upstream_id}-to-{downstream_id}.md`.
 
 ### Phase 1: LOAD
 
@@ -77,7 +77,7 @@ Compute overall verdict:
 
 ### Phase 4: WRITE
 
-1. Save report to `.claude/project/validation-reports/VAL-{NN}-{upstream_id}-to-{downstream_id}.md` following `references/val-report-template.md`.
+1. Save report to `.project/validation-reports/VAL-{NN}-{upstream_id}-to-{downstream_id}.md` following `references/val-report-template.md`.
 2. Output the full report inline for immediate display.
 3. Output a `next_actions` JSON block. Build each command from the actual document IDs, file paths, and verdict from this session. Never use placeholders.
 
@@ -105,7 +105,7 @@ Compute overall verdict:
 - Every gap must reference a specific upstream item ID (AAC-1, FAC-3, E5, etc.), not vague descriptions.
 - If a section referenced by the fragment is missing from a document, report the criterion as FAIL with "section not found" message.
 - For YAML documents (TODO), parse YAML structure correctly. For markdown, parse tables by matching section headers exactly.
-- Save reports to `.claude/project/validation-reports/`.
+- Save reports to `.project/validation-reports/`.
 - Follow the exact output format in `references/val-report-template.md`.
 
 

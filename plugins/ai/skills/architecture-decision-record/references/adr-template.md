@@ -7,7 +7,7 @@ status: draft                                   # draft | active | superseded | 
 scope: {module|system|api|data|infra}
 upstream: []                                    # ADR may have empty upstream
 downstream: []                                  # patched by generators of downstream FDRs/IMPLs
-supersedes: []                                  # list of superseded ADR paths, e.g. [.claude/project/architecture-decision-records/ADR-01-legacy.md]
+supersedes: []                                  # list of superseded ADR paths, e.g. [.project/architecture-decision-records/ADR-01-legacy.md]
 superseded_by: null
 technical_story: {link or null}
 decision_makers: [{team/role}]

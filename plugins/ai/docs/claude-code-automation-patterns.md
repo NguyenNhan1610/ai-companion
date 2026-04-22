@@ -175,7 +175,7 @@ Agent (fdr.md)
   | Phase 3: Stress-test
   | Phase 4: Assess risks
   | Phase 5: Plan
-  | Phase 6: Write -> .claude/project/feature-development-records/FDR-01-session-caching.md
+  | Phase 6: Write -> .project/feature-development-records/FDR-01-session-caching.md
   |
   v
 SubagentStop fires in main context
@@ -232,7 +232,7 @@ SubagentStop hook fires (main context)
   v
 auto-validate-on-stage.sh
   | 1. Read cascade log for last segment
-  | 2. Find Write entries to .claude/project/feature-development-records/FDR-*.md
+  | 2. Find Write entries to .project/feature-development-records/FDR-*.md
   | 3. Match found
   |
   v
@@ -309,7 +309,7 @@ cascade agent
   | 2. Read git diff + git log
   | 3. Group changes by user prompt segments
   | 4. Cross-reference with FDR/IMPL tasks
-  | 5. Write .claude/project/handoff-records/REC-01-auth-refactor.md
+  | 5. Write .project/handoff-records/REC-01-auth-refactor.md
 ```
 
 ### Pattern 6: Knowledge Injection
@@ -321,7 +321,7 @@ User: /ai:feature-development-record Add rate limiting
   |
   v
 FDR agent Phase 0.5: CONSULT KNOWLEDGE BASE
-  | 1. Read .claude/project/knowledge-entries/index.yaml
+  | 1. Read .project/knowledge-entries/index.yaml
   | 2. Match "rate limiting" against trigger_patterns
   | 3. Found: KN-03-rate-limiter-token-bucket.md
   |      trigger_patterns: [rate limit, throttl, token bucket]
@@ -346,7 +346,7 @@ trace agent
   | Phase 2: Spawn 3 parallel sub-agents
   |
   +-> Sub-agent A: Document Discovery
-  |   | Glob all .claude/project/ for references
+  |   | Glob all .project/ for references
   |   | Build dependency graph
   |
   +-> Sub-agent B: Code Evidence
@@ -577,8 +577,8 @@ debug agent
   |
   | Phase 2: Test each hypothesis
   |   For each H: write test script -> run via ai-cli-runtime
-  |   -> .claude/project/scripts/hypothesis/H01_token_expiry.py
-  |   -> .claude/project/scripts/hypothesis/H01_token_expiry_result.json
+  |   -> .project/scripts/hypothesis/H01_token_expiry.py
+  |   -> .project/scripts/hypothesis/H01_token_expiry_result.json
   |
   | Phase 3: Decision tree (Mermaid)
   |   Color-coded: green=confirmed, red=rejected, yellow=inconclusive
@@ -606,8 +606,8 @@ file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 # Fast exit: only care about Write to planning docs
 [ "$tool_name" != "Write" ] && { echo '{}'; exit 0; }
 case "$file_path" in
-  */.claude/project/feature-development-records/FDR-*.md) ;;
-  */.claude/project/implementation-plans/IMPL-*.md) ;;
+  */.project/feature-development-records/FDR-*.md) ;;
+  */.project/implementation-plans/IMPL-*.md) ;;
   *) echo '{}'; exit 0 ;;
 esac
 
@@ -758,7 +758,7 @@ Every planning agent outputs a `next_actions` JSON block with the exact commands
     },
     {
       "action": "Create implementation plan",
-      "command": "/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md"
+      "command": "/ai:implement --from .project/feature-development-records/FDR-03-session-caching.md"
     }
   ]
 }
@@ -775,7 +775,7 @@ Agents can spawn sub-agents for parallel work.
 
 Spawn 3 sub-agents in parallel:
 
-1. **Document Discovery** — Glob .claude/project/ for all related documents
+1. **Document Discovery** — Glob .project/ for all related documents
 2. **Code Evidence** — Grep source files for function signatures from IMPL tasks
 3. **Test Verification** — Check test files exist and match TC criteria
 
@@ -860,7 +860,7 @@ Never in context:
 2. **Create the agent** (`agents/my-stage.md`)
    - Set `skills: [my-stage, mermaid-charts]`
    - Define phased process
-   - End with Write to `.claude/project/my-stage/` + next_actions JSON
+   - End with Write to `.project/my-stage/` + next_actions JSON
 
 3. **Create the command** (`commands/my-stage.md`)
    - Set `context: fork` and `allowed-tools`

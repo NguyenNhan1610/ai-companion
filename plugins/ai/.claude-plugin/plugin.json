@@ -1,6 +1,6 @@
 {
   "name": "ai",
-  "version": "5.6.0",
+  "version": "6.0.0",
   "description": "Use Codex from Claude Code to review code or delegate tasks.",
   "author": {
     "name": "NguyenNhan1610"

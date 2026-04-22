@@ -31,14 +31,14 @@ export const TYPE_TO_SHORT = Object.freeze(
 );
 
 export const TYPE_TO_DIR = Object.freeze({
-  "architecture-decision-record": ".claude/project/architecture-decision-records",
-  "feature-development-record": ".claude/project/feature-development-records",
-  "test-plan": ".claude/project/test-plans",
-  "implementation-plan": ".claude/project/implementation-plans",
-  "todo-list": ".claude/project/todo-lists",
-  "handoff-record": ".claude/project/handoff-records",
-  "traceability-report": ".claude/project/traceability-reports",
-  "validation-report": ".claude/project/validation-reports",
+  "architecture-decision-record": ".project/architecture-decision-records",
+  "feature-development-record": ".project/feature-development-records",
+  "test-plan": ".project/test-plans",
+  "implementation-plan": ".project/implementation-plans",
+  "todo-list": ".project/todo-lists",
+  "handoff-record": ".project/handoff-records",
+  "traceability-report": ".project/traceability-reports",
+  "validation-report": ".project/validation-reports",
 });
 
 const DOC_TYPES = new Set(Object.keys(TYPE_TO_DIR));
@@ -165,7 +165,7 @@ export function validateDoc(doc, repoRoot) {
     for (const entry of list) {
       if (typeof entry !== "string") { errors.push(`${field} entry ${JSON.stringify(entry)} must be a string path`); continue; }
       if (path.isAbsolute(entry)) errors.push(`${field} entry '${entry}' must be a relative path (from repo root), not absolute`);
-      if (!entry.startsWith(".claude/project/")) errors.push(`${field} entry '${entry}' must start with '.claude/project/'`);
+      if (!entry.startsWith(".project/")) errors.push(`${field} entry '${entry}' must start with '.project/'`);
       if (repoRoot) {
         const abs = path.resolve(repoRoot, entry);
         if (!fs.existsSync(abs)) warnings.push(`${field} entry '${entry}' does not exist at ${abs}`);

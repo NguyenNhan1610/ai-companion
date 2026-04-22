@@ -1,6 +1,6 @@
 # TODO-03: UI Dashboard — Phase 3: BlockNote Project Editor
 # Source: IMPL-01-ui-dashboard.md
-# Goal: Rich document editor for .claude/project/ files with BlockNote,
+# Goal: Rich document editor for .project/ files with BlockNote,
 #        file tree, markdown round-trip, custom blocks (YAML, Mermaid, TODO Kanban)
 # Depends on: Phase 1 (server), Phase 2 (layout shell)
 
@@ -24,16 +24,16 @@ tasks:
     priority: P0
     track: api
     description: |
-      Create server/routes/files.ts scoped to {projectRoot}/.claude/project/ only.
+      Create server/routes/files.ts scoped to {projectRoot}/.project/ only.
       GET /api/files/tree — recursive directory listing as JSON tree.
       GET /api/files/:path(*) — read file content (raw text).
       PUT /api/files/:path(*) — write file content (create/overwrite).
       DELETE /api/files/:path(*) — delete file.
       POST /api/files/mkdir/:path(*) — create directory.
-      Security: resolve all paths, verify under .claude/project/, reject "..",
+      Security: resolve all paths, verify under .project/, reject "..",
       reject symlinks outside scope, max file size 1MB.
 
-      Create server/lib/file-watcher.ts — fs.watch on .claude/project/ recursively,
+      Create server/lib/file-watcher.ts — fs.watch on .project/ recursively,
       emit file_changed events to EventBus, 300ms debounce per path.
     files:
       - plugins/ai/ui/server/routes/files.ts

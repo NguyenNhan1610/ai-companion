@@ -393,19 +393,21 @@ async function handleSetup(argv, backend) {
   // Handle --init
   if (options.init) {
     const projectDirs = [
-      ".claude/project/architecture-decision-records",
-      ".claude/project/feature-development-records",
-      ".claude/project/implementation-plans",
-      ".claude/project/handoff-records",
-      ".claude/project/scripts/hypothesis",
-      ".claude/project/knowledge-entries/patterns",
-      ".claude/project/knowledge-entries/lessons",
-      ".claude/project/knowledge-entries/decisions",
-      ".claude/project/knowledge-entries/antipatterns",
-      ".claude/project/traceability-reports",
-      ".claude/project/todo-lists",
-      ".claude/project/guidelines",
-      ".claude/project/workflows",
+      ".project/architecture-decision-records",
+      ".project/feature-development-records",
+      ".project/test-plans",
+      ".project/implementation-plans",
+      ".project/todo-lists",
+      ".project/handoff-records",
+      ".project/traceability-reports",
+      ".project/validation-reports",
+      ".project/knowledge-entries/patterns",
+      ".project/knowledge-entries/lessons",
+      ".project/knowledge-entries/decisions",
+      ".project/knowledge-entries/antipatterns",
+      ".project/scripts/hypothesis",
+      ".project/guidelines",
+      ".project/workflows",
       ".claude/cascades"
     ];
     const created = [];
@@ -424,14 +426,16 @@ async function handleSetup(argv, backend) {
     const claudeSection = `
 ${marker}
 
-- \`.claude/project/architecture-decision-records/\` — Architecture Decision Records (ADR-XX-{slug}.md)
-- \`.claude/project/feature-development-records/\` — Feature Development Records (FDR-XX-{slug}.md)
-- \`.claude/project/implementation-plans/\` — DAG task plans (IMPL-XX-{slug}.md)
-- \`.claude/project/handoff-records/\` — Implementation records with traceability (REC-XX-{slug}.md)
-- \`.claude/project/traceability-reports/\` — Traceability reports with coverage verification (TRACE-XX-{slug}.md)
-- \`.claude/project/knowledge-entries/\` — Reusable knowledge: patterns, lessons, decisions, antipatterns
-- \`.claude/project/todo-lists/\` — Task tracking with status + tickets (TODO-XX-{slug}.yaml)
-- \`.claude/project/scripts/hypothesis/\` — Hypothesis test scripts (H{NN}_{slug}.py + _result.json)
+- \`.project/architecture-decision-records/\` — Architecture Decision Records (ADR-{NN}-{slug}.md)
+- \`.project/feature-development-records/\` — Feature Development Records (FDR-{NN}-{slug}.md)
+- \`.project/test-plans/\` — Test Plans with traceability matrices (TP-{NN}-{slug}.md)
+- \`.project/implementation-plans/\` — DAG task plans (IMPL-{NN}-{slug}.md)
+- \`.project/todo-lists/\` — Task tracking with DAG, priority, confidence, effort (TODO-{NN}-{slug}.yaml)
+- \`.project/handoff-records/\` — Implementation records with traceability (HANDOFF-{NN}-{slug}.md)
+- \`.project/traceability-reports/\` — Traceability reports with coverage verification (TRACE-{NN}-{slug}.md)
+- \`.project/validation-reports/\` — Pairwise validation reports (VAL-{NN}-{upstream}-to-{downstream}.md)
+- \`.project/knowledge-entries/\` — Reusable knowledge: patterns, lessons, decisions, antipatterns
+- \`.project/scripts/hypothesis/\` — Hypothesis test scripts (H{NN}_{slug}.py + _result.json)
 - \`.claude/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
 - \`.claude/rules/\` — On-demand coding rules by stack (install via /ai:setup --install-rules)
 
@@ -443,7 +447,7 @@ Core loop (ADR → FDR → IMPL → TODO → code → test → lint → cascade 
 2. \`/ai:feature-development-record\` — plan a feature with edge cases, risks against existing codebase, and impact analysis
 3. \`/ai:implement\` — turn an FDR/ADR into a DAG task plan with critical path
 4. \`/ai:todo\` — track tasks with status, tickets, and evidence links
-5. Write code and tests; use \`.claude/project/scripts/hypothesis/\` for investigative scripts
+5. Write code and tests; use \`.project/scripts/hypothesis/\` for investigative scripts
 6. \`/ai:lint\` — batch lint/typecheck files changed in this segment
 7. \`/ai:cascade\` — turn the change log into an implementation record with traceability
 8. \`/ai:review\` or \`/ai:adversarial-review\` — AI code review against local git state

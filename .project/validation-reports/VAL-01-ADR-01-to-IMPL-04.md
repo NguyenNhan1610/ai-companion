@@ -1,8 +1,8 @@
 # VAL-01: ADR-01 → IMPL-04
 
 **Date:** 2026-04-13
-**Upstream:** .claude/project/adr/ADR-01-native-statusline-stdin-telemetry.md
-**Downstream:** .claude/project/implementation_plans/IMPL-04-native-statusline-stdin-telemetry.md
+**Upstream:** .project/adr/ADR-01-native-statusline-stdin-telemetry.md
+**Downstream:** .project/implementation_plans/IMPL-04-native-statusline-stdin-telemetry.md
 **Pair type:** adr-impl
 **Verdict:** PASS
 **Coverage:** 100% — 2/2 criteria passed

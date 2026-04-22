@@ -84,7 +84,7 @@ H1: [Specific description of suspected cause]
 - **INCONCLUSIVE** — test couldn't produce a clear signal; needs a better experiment
 
 **Script persistence:**
-All scripts saved to `.claude/project/scripts/hypothesis/`:
+All scripts saved to `.project/scripts/hypothesis/`:
 - `H{NN}_{slug}.py` — test script with structured docstring
 - `H{NN}_{slug}_result.json` — JSON result with status + evidence
 

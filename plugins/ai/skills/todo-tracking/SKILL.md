@@ -10,7 +10,7 @@ Structured todo-list management with explicit typed dependencies, priority, conf
 
 ## Layout contract
 
-A todo-list is a YAML file at `.claude/project/todo-lists/TODO-{NN}-{slug}.yaml`. The file order is fixed so agents can read the graph before task bodies:
+A todo-list is a YAML file at `.project/todo-lists/TODO-{NN}-{slug}.yaml`. The file order is fixed so agents can read the graph before task bodies:
 
 1. **Header** — `id`, `type`, `slug`, `title`, `status`, `upstream`, `downstream`, timestamps.
 2. **DAG block** — `dependencies:` then `computed:`. These appear *before* `tasks:` so a reader loading the first ~60 lines gets the full graph.

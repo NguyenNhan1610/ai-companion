@@ -26,7 +26,7 @@ Plan a feature with deep codebase analysis, edge cases, risk assessment against 
 
 Scopes: `backend` (default), `frontend`, `fullstack`, `api`, `data`. Add `,lite` for FDR→IMPL→TODO flow (no ADR/TP).
 
-Outputs: Dependency graph, data flow, edge cases, risk matrix, testing strategy, timeline, rollout plan. Saved to `.claude/project/feature-development-records/`.
+Outputs: Dependency graph, data flow, edge cases, risk matrix, testing strategy, timeline, rollout plan. Saved to `.project/feature-development-records/`.
 
 ## `/ai:test-plan` — Test Plan from FDR
 
@@ -35,18 +35,18 @@ Outputs: Dependency graph, data flow, edge cases, risk matrix, testing strategy,
 /ai:test-plan --from FDR-03 --adr ADR-05
 ```
 
-Generates structured test plan with FAC→TC traceability matrices. Saved to `.claude/project/test-plans/`.
+Generates structured test plan with FAC→TC traceability matrices. Saved to `.project/test-plans/`.
 
 ## `/ai:implement` — DAG-Based Implementation Plan
 
 ```bash
-/ai:implement --from .claude/project/feature-development-records/FDR-03-session-caching.md
-/ai:implement --from .claude/project/feature-development-records/FDR-03.md --method tdd
+/ai:implement --from .project/feature-development-records/FDR-03-session-caching.md
+/ai:implement --from .project/feature-development-records/FDR-03.md --method tdd
 ```
 
 Methods: `pragmatic` (default), `tdd`, `agile`, `kanban`, `shape-up`
 
-Outputs: Task DAG with Mermaid diagram, critical path, parallel tracks, per-task details. Saved to `.claude/project/implementation-plans/`.
+Outputs: Task DAG with Mermaid diagram, critical path, parallel tracks, per-task details. Saved to `.project/implementation-plans/`.
 
 ## `/ai:todo` — Task Tracking
 
@@ -58,7 +58,7 @@ Outputs: Task DAG with Mermaid diagram, critical path, parallel tracks, per-task
 /ai:todo --sync                       # Auto-sync from cascade
 ```
 
-Statuses: `pending`, `in-progress`, `complete`, `blocked`, `cancelled`. Saved to `.claude/project/todo-lists/`.
+Statuses: `pending`, `in-progress`, `complete`, `blocked`, `cancelled`. Saved to `.project/todo-lists/`.
 
 ## `/ai:validate` — Pairwise Stage Validation
 
@@ -68,7 +68,7 @@ Statuses: `pending`, `in-progress`, `complete`, `blocked`, `cancelled`. Saved to
 /ai:validate FDR-03                    # Auto-discover upstream
 ```
 
-Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip). Saved to `.claude/project/validation-reports/`.
+Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip). Saved to `.project/validation-reports/`.
 
 ## `/ai:trace` — Traceability Report
 
@@ -77,7 +77,7 @@ Valid pairs: ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL
 /ai:trace --verify FDR-03             # Ship/no-ship verdict
 ```
 
-Uses 3 parallel sub-agents. Produces: document chain diagram, coverage matrices, gap analysis, overall percentage. Saved to `.claude/project/traceability-reports/`.
+Uses 3 parallel sub-agents. Produces: document chain diagram, coverage matrices, gap analysis, overall percentage. Saved to `.project/traceability-reports/`.
 
 ## Document Flow
 

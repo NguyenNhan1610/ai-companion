@@ -1,5 +1,5 @@
 # todo-list schema — DAG-first, authored by humans/agents, validated by planning-docs.mjs
-# Location: .claude/project/todo-lists/TODO-{NN}-{slug}.yaml
+# Location: .project/todo-lists/TODO-{NN}-{slug}.yaml
 
 # ── Header (strict frontmatter) ─────────────────────────────────────────
 
@@ -11,7 +11,7 @@ status: active                                # draft | active | superseded | de
 
 # Relationships: full relative paths from repo root, not bare IDs.
 upstream:
-  - .claude/project/implementation-plans/IMPL-03-chat-ui-copilot-experience.md
+  - .project/implementation-plans/IMPL-03-chat-ui-copilot-experience.md
 downstream: []                                # todo-list is a leaf
 
 supersedes: []                                # not applicable for todo-list

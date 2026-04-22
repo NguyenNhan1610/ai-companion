@@ -7,7 +7,7 @@
  *                       [--critical-path] [--ready] [--cwd <path>]
  *
  * Defaults:
- *   - picks the newest todo-list in .claude/project/todo-lists/ if no id given
+ *   - picks the newest todo-list in .project/todo-lists/ if no id given
  *   - format: ascii
  */
 

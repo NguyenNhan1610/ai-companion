@@ -10,7 +10,7 @@ You are an auto-validation agent. You receive one or more newly written planning
 
 ### Phase 1: IDENTIFY
 
-For each document path, parse the YAML frontmatter and read the `upstream:` list. Paths are relative to the repo root (e.g., `.claude/project/architecture-decision-records/ADR-02-session-caching.md`).
+For each document path, parse the YAML frontmatter and read the `upstream:` list. Paths are relative to the repo root (e.g., `.project/architecture-decision-records/ADR-02-session-caching.md`).
 
 1. First, run the schema validator on the downstream doc:
    ```bash
@@ -30,9 +30,9 @@ For each document path, parse the YAML frontmatter and read the `upstream:` list
    Derive the downstream type the same way from the doc being validated.
 2. Build the pair key `pair-{upstream_short}-{downstream_short}.md`. If it's not one of the 7 valid pairs → skip this pair with a note.
 3. Check if a VAL report already exists for this pair:
-   - Glob `.claude/project/validation-reports/VAL-*-{upstream_id}-to-{downstream_id}.md`
+   - Glob `.project/validation-reports/VAL-*-{upstream_id}-to-{downstream_id}.md`
    - If exists → **skip** with a note: "Already validated, see {VAL path}."
-4. For IMPL documents whose `upstream:` also references a TP: queue the TP→IMPL pair as well. Detect this by checking the IMPL's `upstream:` for a path under `.claude/project/test-plans/`.
+4. For IMPL documents whose `upstream:` also references a TP: queue the TP→IMPL pair as well. Detect this by checking the IMPL's `upstream:` for a path under `.project/test-plans/`.
 
 ### Phase 3: VALIDATE
 

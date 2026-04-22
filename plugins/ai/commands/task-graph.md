@@ -19,7 +19,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/task-graph.mjs" $ARGUMENTS
 
 ## Usage
 
-- `/ai:task-graph` — render the newest todo-list in `.claude/project/todo-lists/` as an ASCII tree.
+- `/ai:task-graph` — render the newest todo-list in `.project/todo-lists/` as an ASCII tree.
 - `/ai:task-graph TODO-03` — render a specific todo-list by id.
 - `/ai:task-graph TODO-03 --critical-path` — print only the critical path, effort-weighted.
 - `/ai:task-graph TODO-03 --ready` — print only the ready set (tasks with no unmet hard/data dependencies).
@@ -40,4 +40,4 @@ Nodes show as `task-NN [priority effort status] title`. Unreachable tasks (disco
 
 - Read-only. Never modify the todo-list.
 - If validation errors exist, the script prints them to stderr and still renders the current DAG.
-- Todo-lists live at `.claude/project/todo-lists/TODO-{NN}-{slug}.yaml`.
+- Todo-lists live at `.project/todo-lists/TODO-{NN}-{slug}.yaml`.

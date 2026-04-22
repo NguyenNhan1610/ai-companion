@@ -5,8 +5,8 @@ slug: {kebab-slug}
 title: {Feature/Change Title}
 status: active                                  # draft | active | superseded | deprecated
 upstream:                                       # planning docs that cover the work being recorded; may be empty for ad-hoc work
-  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
-  - .claude/project/implementation-plans/IMPL-{NN}-{slug}.md
+  - .project/feature-development-records/FDR-{NN}-{slug}.md
+  - .project/implementation-plans/IMPL-{NN}-{slug}.md
 downstream: []
 supersedes: []
 superseded_by: null
@@ -31,9 +31,9 @@ updated: {YYYY-MM-DD}
 
 | Document | Path | Status |
 |----------|------|--------|
-| ADR | .claude/project/architecture-decision-records/ADR-{NN}-{slug}.md | {draft/active/superseded} |
-| FDR | .claude/project/feature-development-records/FDR-{NN}-{slug}.md | {draft/active/superseded} |
-| IMPL | .claude/project/implementation-plans/IMPL-{NN}-{slug}.md | {draft/active/superseded} |
+| ADR | .project/architecture-decision-records/ADR-{NN}-{slug}.md | {draft/active/superseded} |
+| FDR | .project/feature-development-records/FDR-{NN}-{slug}.md | {draft/active/superseded} |
+| IMPL | .project/implementation-plans/IMPL-{NN}-{slug}.md | {draft/active/superseded} |
 
 *If no planning documents found, note: "No planning documents found for this implementation."*
 

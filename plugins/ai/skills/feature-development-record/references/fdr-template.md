@@ -6,7 +6,7 @@ title: {Feature Title}
 status: draft                                   # draft | active | superseded | deprecated
 scope: [{backend|frontend|fullstack|api|data}]
 upstream:                                       # full relative paths; at least one required
-  - .claude/project/architecture-decision-records/ADR-{NN}-{slug}.md
+  - .project/architecture-decision-records/ADR-{NN}-{slug}.md
 downstream: []                                  # patched by TP/IMPL generators
 supersedes: []
 superseded_by: null

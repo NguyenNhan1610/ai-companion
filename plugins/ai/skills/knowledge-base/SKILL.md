@@ -39,7 +39,7 @@ Extract reusable knowledge from project experience and retrieve it when starting
 ## Files
 
 ```
-.claude/project/knowledge-entries/
+.project/knowledge-entries/
 ├── index.yaml                    ← Master index for retrieval
 ├── patterns/PAT-{NN}-{slug}.md
 ├── lessons/LES-{NN}-{slug}.md

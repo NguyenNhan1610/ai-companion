@@ -22,20 +22,20 @@ file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 
 # Only interested in planning docs.
 case "$file_path" in
-  */.claude/project/architecture-decision-records/ADR-*.md) ;;
-  */.claude/project/feature-development-records/FDR-*.md) ;;
-  */.claude/project/test-plans/TP-*.md) ;;
-  */.claude/project/implementation-plans/IMPL-*.md) ;;
-  */.claude/project/todo-lists/TODO-*.yaml) ;;
-  */.claude/project/handoff-records/HANDOFF-*.md) ;;
-  */.claude/project/traceability-reports/TRACE-*.md) ;;
-  */.claude/project/validation-reports/VAL-*.md) ;;
+  */.project/architecture-decision-records/ADR-*.md) ;;
+  */.project/feature-development-records/FDR-*.md) ;;
+  */.project/test-plans/TP-*.md) ;;
+  */.project/implementation-plans/IMPL-*.md) ;;
+  */.project/todo-lists/TODO-*.yaml) ;;
+  */.project/handoff-records/HANDOFF-*.md) ;;
+  */.project/traceability-reports/TRACE-*.md) ;;
+  */.project/validation-reports/VAL-*.md) ;;
   *) echo '{}'; exit 0 ;;
 esac
 
 [ ! -f "$file_path" ] && { echo '{}'; exit 0; }
 
-project_root=$(echo "$file_path" | grep -oP '^.*(?=/\.claude/project/)' || true)
+project_root=$(echo "$file_path" | grep -oP '^.*(?=/\.project/)' || true)
 [ -z "$project_root" ] && { echo '{}'; exit 0; }
 
 # Locate planning-docs.mjs — prefer the plugin cache version, else fall

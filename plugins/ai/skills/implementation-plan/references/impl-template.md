@@ -5,7 +5,7 @@ slug: {kebab-slug}
 title: {Feature/Decision Title}
 status: draft                                   # draft | active | superseded | deprecated
 upstream:                                       # FDR is canonical; may also include ADR directly
-  - .claude/project/feature-development-records/FDR-{NN}-{slug}.md
+  - .project/feature-development-records/FDR-{NN}-{slug}.md
 downstream: []                                  # patched by TODO generator
 supersedes: []
 superseded_by: null

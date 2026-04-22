@@ -6,7 +6,7 @@ Add this step to Phase 1 of any planning/analysis agent (FDR, ADR, IMPL, debug).
 
 Before starting analysis, check the knowledge base for relevant past experience:
 
-1. Check if `.claude/project/knowledge-entries/index.yaml` exists
+1. Check if `.project/knowledge-entries/index.yaml` exists
 2. If yes, read it and match the current task against `trigger_patterns`
 3. For each match, read the full entry and extract:
    - What solution worked before

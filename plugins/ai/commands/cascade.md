@@ -15,8 +15,8 @@ The cascade agent:
 2. Reads `git diff` + `git log` for actual code changes
 3. Explores changed files to understand intent and trace to source documents
 4. Groups changes by user prompt segments
-5. Checks traceability to FDR/ADR/IMPL documents in `.claude/project/`
-6. Writes structured record to `.claude/project/handoff-records/REC-{NN}-{slug}.md`
+5. Checks traceability to FDR/ADR/IMPL documents in `.project/`
+6. Writes structured record to `.project/handoff-records/REC-{NN}-{slug}.md`
 
 Execution mode:
 - Default to foreground.
@@ -30,7 +30,7 @@ Time filter:
 
 Operating rules:
 - Every file:line citation must be verified by reading the actual file.
-- Traceability to FDR/ADR/IMPL is required — scan `.claude/project/` for related documents.
+- Traceability to FDR/ADR/IMPL is required — scan `.project/` for related documents.
 - Task completion status must reference specific IMPL tasks by ID.
 - Edge case and risk coverage must reference specific FDR items.
 - Do NOT implement or fix anything. Only document what was done.
